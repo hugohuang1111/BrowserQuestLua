@@ -1,0 +1,13 @@
+
+
+.upscaled, .upscaled #previous, .upscaled #next {background:url('../img/3/achievements.png');}
+
+@media screen and (min-width: 1501px) {
+
+.upscaled, .upscaled #previous, .upscaled #next {background:url('../img/3/achievements.png') repeat -1px 0;}
+
+}
+
+
+dkdkkdkd
+
