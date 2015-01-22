@@ -2,10 +2,12 @@
 local MyApp = class("MyApp", cc.load("mvc").AppBase)
 
 function MyApp:onCreate()
-	self.resScale_ = 1
+	self.resScale_ = 2
 
 	display.loadSpriteFrames("img/" .. self.resScale_ .. "/spritesheet.plist",
 		"img/" .. self.resScale_ .. "/spritesheet.png")
+	display.loadSpriteFrames("img/" .. self.resScale_ .. "/barsheet.plist",
+		"img/" .. self.resScale_ .. "/barsheet.png")
 
     math.randomseed(os.time())
 

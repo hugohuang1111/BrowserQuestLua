@@ -9,6 +9,10 @@ require "cocos.init"
 -- opengl
 require "cocos.cocos2d.OpenglConstants"
 
+-- ui
+require "cocos.ui.GuiConstants"
+require "cocos.ui.experimentalUIConstants"
+
 local function main()
     require("app.MyApp"):create():run("LoginScene")
 end

@@ -82,6 +82,32 @@
                 <key>sourceSize</key>
                 <string>{12,21}</string>
             </dict>
+            <key>button.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{230,0},{124, 46}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{124, 46}}</string>
+                <key>sourceSize</key>
+                <string>{124, 46}</string>
+            </dict>
+            <key>button-disable.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{500,952},{54,204}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{54,204}}</string>
+                <key>sourceSize</key>
+                <string>{54,204}</string>
+            </dict>
         </dict>
         <key>metadata</key>
         <dict>

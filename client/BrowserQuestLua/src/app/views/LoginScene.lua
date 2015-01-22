@@ -40,9 +40,23 @@ function LoginScene:onCreate()
     local nameBgSize = cc.size(200, 30)
     local nameBg = cc.LayerColor:create(cc.c4b(0, 0, 0, 60))
     nameBg:setContentSize(nameBgSize)
-    nameBg:align(display.CENTER, parchmentSize.width/2, parchmentSize.height - 70)
+    nameBg:align(display.CENTER, 120, parchmentSize.height - 100)
     nameBg:addTo(parchment)
-    nameBg:setAnchorPoint(cc.p(0.5, 0.5))
+
+    local textfield = ccui.TextField:create("Name your character", "fonts/advocut-webfont.ttf", 20)
+        :align(display.CENTER, nameBgSize.width/2, nameBgSize.height/2)
+        :addTo(nameBg)
+
+    ccui.Button:create("button.png", "button.png", "button-disable.png", ccui.TextureResType.plistType)
+        :align(display.CENTER, parchmentSize.width/2, parchmentSize.height - 135)
+        :addTo(parchment)
+        :onTouch(function(event)
+            if "ended" == event.name then
+                app:enterScene("GameScene")
+            end
+        end)
+
+    -- nameBg:setAnchorPoint(cc.p(1, 1))
     -- local nameEditBox = ccui.TextField:create("Name your character",
     --                          "fonts/graphicpixel-webfont.ttf", 24);
     -- nameEditBox:align(display.CENTER, nameBgSize.width/2, nameBgSize.height/2):addTo(nameBg)
