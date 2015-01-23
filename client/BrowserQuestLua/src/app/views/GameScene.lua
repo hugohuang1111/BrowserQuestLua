@@ -43,6 +43,7 @@ function GameScene:createMap()
 	self.map_ = map
 
 	self.camera_ = Camera.new(map)
+	self.camera_:move(-12*16, (250 - 314)*16)
 end
 
 function GameScene:onTouchBegan(touch, event)

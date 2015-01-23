@@ -47,11 +47,6 @@ function Camera:ctor(map)
 end
 
 function Camera:move(disX, disY)
-	if self.bMove then
-		return
-	end
-	-- self.bMove = true
-
 	local disX = disX or 0
 	local disY = disY or 0
 	local posX, posY = self.map_:getPosition()
