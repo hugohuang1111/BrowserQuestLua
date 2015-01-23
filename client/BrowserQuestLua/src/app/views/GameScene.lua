@@ -1,4 +1,5 @@
 
+local Camera = import("..models.Camera")
 local GameScene = class("GameScene", cc.load("mvc").ViewBase)
 
 function GameScene:onCreate()
@@ -29,8 +30,34 @@ function GameScene:createMap()
 	local mapNode = display.newNode():addTo(self)
 	mapNode:setLocalZOrder(10)
 
+	-- register listener
+    local listener = cc.EventListenerTouchOneByOne:create()
+    listener:registerScriptHandler(handler(self, self.onTouchBegan), cc.Handler.EVENT_TOUCH_BEGAN)
+    listener:registerScriptHandler(handler(self, self.onTouchMoved), cc.Handler.EVENT_TOUCH_MOVED)
+    listener:registerScriptHandler(handler(self, self.onTouchEnded), cc.Handler.EVENT_TOUCH_ENDED)
+    local eventDispatcher = cc.Director:getInstance():getEventDispatcher()
+    eventDispatcher:addEventListenerWithSceneGraphPriority(listener, mapNode)
+
 	local map = cc.TMXTiledMap:create("maps/map.tmx"):addTo(mapNode)
 
+	self.map_ = map
+
+	self.camera_ = Camera.new(map)
+end
+
+function GameScene:onTouchBegan(touch, event)
+	return true
+end
+
+function GameScene:onTouchMoved(touch, event)
+	local diff = touch:getDelta()
+	self.camera_:move(diff.x, diff.y)
+    -- local currentPosX, currentPosY= self.map_:getPosition()
+    -- self.map_:setPosition(cc.p(currentPosX + diff.x, currentPosY + diff.y))
+end
+
+function GameScene:onTouchEnded(touch, event)
+	-- body
 end
 
 return GameScene
