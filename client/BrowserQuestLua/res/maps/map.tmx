@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="172" height="314" tilewidth="16" tileheight="16">
- <tileset firstgid="1" name="tilesheet" tilewidth="16" tileheight="16">
-  <image source="../img/1/tilesheet.png" width="320" height="1568"/>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="172" height="314" tilewidth="14" tileheight="14">
+ <tileset firstgid="1" name="tilesheet" tilewidth="14" tileheight="14" spacing="2" margin="1">
+  <image source="tilesheet.png" width="320" height="1568"/>
   <tile id="0">
    <properties>
     <property name="length" value="3"/>

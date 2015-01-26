@@ -42,8 +42,7 @@ function Camera:ctor(map)
 	self.XVals_[2] = 93*tileSize.width
 	self.XVals_[3] = 114*tileSize.width
 
-	dump(self.XVals_, "XVals_:")
-	dump(self.YVals_, "YVals_:")
+	self.tileSize_ = tileSize
 end
 
 function Camera:move(disX, disY)
@@ -63,16 +62,12 @@ function Camera:move(disX, disY)
 	elseif posY + self.YVals_[3] + disY < display.top then
 		disY = display.top - posY - self.YVals_[3]
 	end
-	-- print("disY1:" .. disY)
 
 	--不能到的区域
-	local noReachRect = cc.rect(posX + disX + 93*16, posY + disY, self.XVals_[3] - self.XVals_[2], self.YVals_[2])
+	local noReachRect = cc.rect(posX + disX + 93*self.tileSize_.width, posY + disY, self.XVals_[3] - self.XVals_[2], self.YVals_[2])
 	local screenRect = cc.rect(display.left, display.bottom, display.width, display.height)
 	local intersectRect = cc.rectIntersection(noReachRect, screenRect)
-	-- dump(noReachRect, "noReachRect:")
-	-- dump(screenRect, "nscreenRect:")
 	if (intersectRect.width > 0 and intersectRect.height > 0) then
-		dump(intersectRect, "intersectRect:")
 		if math.abs(disX) > intersectRect.width then
 			if disX > 0 then
 				disX = disX - intersectRect.width
@@ -90,8 +85,6 @@ function Camera:move(disX, disY)
 			disY = 0
 		end
 	end
-
-	-- print("disY2:" .. disY)
 
 	self.map_:setPosition(posX + disX, posY + disY)
 end

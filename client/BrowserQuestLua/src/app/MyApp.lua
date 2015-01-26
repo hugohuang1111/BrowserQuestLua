@@ -39,4 +39,8 @@ function MyApp:getResPath(filename)
 	end
 end
 
+function MyApp:getScale()
+	return self.resScale_
+end
+
 return MyApp

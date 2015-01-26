@@ -1,6 +1,8 @@
 
 local Camera = import("..models.Camera")
+local Entity = import("..models.Entity")
 local GameScene = class("GameScene", cc.load("mvc").ViewBase)
+
 
 function GameScene:onCreate()
 	self:createUI()
@@ -43,8 +45,16 @@ function GameScene:createMap()
 	self.map_ = map
 
 	self.camera_ = Camera.new(map)
-	self.camera_:move(-12*16, (250 - 314)*16)
+	-- self.camera_:move(-12*16, (250 - 314)*16)
+
+	local entity = Entity.new("clotharmor.png")
+	local player = entity:getView()
+	player:setPosition(cc.p(200, 200))
+	player:setLocalZOrder(110)
+	map:addChild(player)
+	entity:play("idle")
 end
+
 
 function GameScene:onTouchBegan(touch, event)
 	return true
