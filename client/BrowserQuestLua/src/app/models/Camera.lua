@@ -25,22 +25,26 @@ B的位置:(114, 62)  从1开始计算,从左上为起点
 
 ]]
 local Camera = class("Camera")
+local Game = import(".Game").getInstance()
 
 function Camera:ctor(map)
 	self.map_ = map
-	local mapSize = map:getMapSize()
-	local tileSize = map:getTileSize()
+	local mapSize = Game:getMapSize()
+	local tileSize = Game:getTileSize()
+	local scale = map:getScale()
+
+	print("scale:" .. scale)
 
 	--YVals_ 以左下为起点
 	self.YVals_ = {}
 	self.YVals_[1] = 0
-	self.YVals_[2] = (mapSize.height - 62)*tileSize.height
-	self.YVals_[3] = mapSize.height*tileSize.height
+	self.YVals_[2] = (mapSize.height - 62)*tileSize.height * scale
+	self.YVals_[3] = mapSize.height*tileSize.height * scale
 
 	self.XVals_ = {}
 	self.XVals_[1] = 0
-	self.XVals_[2] = 93*tileSize.width
-	self.XVals_[3] = 114*tileSize.width
+	self.XVals_[2] = 93 * tileSize.width * scale
+	self.XVals_[3] = 114 * tileSize.width * scale
 
 	self.tileSize_ = tileSize
 end
@@ -64,7 +68,7 @@ function Camera:move(disX, disY)
 	end
 
 	--不能到的区域
-	local noReachRect = cc.rect(posX + disX + 93*self.tileSize_.width, posY + disY, self.XVals_[3] - self.XVals_[2], self.YVals_[2])
+	local noReachRect = cc.rect(posX + disX + self.XVals_[2], posY + disY, self.XVals_[3] - self.XVals_[2], self.YVals_[2])
 	local screenRect = cc.rect(display.left, display.bottom, display.width, display.height)
 	local intersectRect = cc.rectIntersection(noReachRect, screenRect)
 	if (intersectRect.width > 0 and intersectRect.height > 0) then
@@ -86,6 +90,7 @@ function Camera:move(disX, disY)
 		end
 	end
 
+	printInfo("pos x:%d y:%d", posX + disX, posY + disY)
 	self.map_:setPosition(posX + disX, posY + disY)
 end
 

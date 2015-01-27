@@ -1,11 +1,12 @@
 
+local Game = import("..models.Game").getInstance()
 local Camera = import("..models.Camera")
 local Entity = import("..models.Entity")
 local GameScene = class("GameScene", cc.load("mvc").ViewBase)
 
 
 function GameScene:onCreate()
-	self:createUI()
+	-- self:createUI()
 	self:createMap()
 end
 
@@ -40,16 +41,25 @@ function GameScene:createMap()
     local eventDispatcher = cc.Director:getInstance():getEventDispatcher()
     eventDispatcher:addEventListenerWithSceneGraphPriority(listener, mapNode)
 
+    -- register keyboard listener
+    listener = cc.EventListenerKeyboard:create()
+    listener:registerScriptHandler(handler(self, self.onKeyPressed), cc.Handler.EVENT_KEYBOARD_PRESSED)
+    listener:registerScriptHandler(handler(self, self.onKeyReleased), cc.Handler.EVENT_KEYBOARD_RELEASED)
+    eventDispatcher:addEventListenerWithSceneGraphPriority(listener, mapNode)
+
 	local map = cc.TMXTiledMap:create("maps/map.tmx"):addTo(mapNode)
+	map:setScale(1)
+
+	Game:setMap(map)
 
 	self.map_ = map
 
 	self.camera_ = Camera.new(map)
-	-- self.camera_:move(-12*16, (250 - 314)*16)
+	self.camera_:move(-12*14, (250 - 314)*14)
 
 	local entity = Entity.new("clotharmor.png")
 	local player = entity:getView()
-	player:setPosition(cc.p(200, 200))
+	entity:setMapPos(cc.p(36, 230))
 	player:setLocalZOrder(110)
 	map:addChild(player)
 	entity:play("idle")
@@ -69,6 +79,28 @@ end
 
 function GameScene:onTouchEnded(touch, event)
 	-- body
+end
+
+function GameScene:onKeyPressed(keyCode, event)
+	if cc.KeyCode.KEY_LEFT_ARROW == keyCode then
+		dump(event, "event:")
+	elseif cc.KeyCode.KEY_RIGHT_ARROW == keyCode then
+	elseif cc.KeyCode.KEY_UP_ARROW == keyCode then
+	elseif cc.KeyCode.KEY_DOWN_ARROW == keyCode then
+	else
+		print("keyCode:" .. keyCode)
+	end
+end
+
+function GameScene:onKeyReleased(keyCode, event)
+	if cc.KeyCode.KEY_LEFT_ARROW == keyCode then
+		dump(event, "event:")
+	elseif cc.KeyCode.KEY_RIGHT_ARROW == keyCode then
+	elseif cc.KeyCode.KEY_UP_ARROW == keyCode then
+	elseif cc.KeyCode.KEY_DOWN_ARROW == keyCode then
+	else
+		print("keyCode:" .. keyCode)
+	end
 end
 
 return GameScene
