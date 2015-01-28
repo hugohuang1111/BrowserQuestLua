@@ -7,7 +7,7 @@ function MobBoss:ctor(args)
 	args.image = "boss.png"
 	args.type = Mob.TYPE_BOSS
 
-	self.super.ctro(self, args)
+	MobBoss.super.ctro(self, args)
 end
 
 return MobBoss

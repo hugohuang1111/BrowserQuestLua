@@ -7,7 +7,7 @@ function MobRat:ctor(args)
 	args.image = "rat.png"
 	args.type = Mob.TYPE_RAT
 
-	self.super.ctro(self, args)
+	MobRat.super.ctro(self, args)
 end
 
 return MobRat

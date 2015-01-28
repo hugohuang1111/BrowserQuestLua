@@ -14,6 +14,7 @@ function Game.getInstance()
 end
 
 function Game:ctor()
+	self.pathGrid_ = {}
 end
 
 function Game:setMap(map)
@@ -25,6 +26,8 @@ function Game:setMap(map)
 
 	self.mapSize_ = mapSize
 	self.tileSize_ = tileSize --cc.size(tileSize.width * scale, tileSize.height * scale)
+
+	self:loadPathGrid_()
 end
 
 function Game:getTileSize()
@@ -39,12 +42,85 @@ function Game:getMapSizePx()
 	return cc.size(self.mapSize_.width * self.tileSize_.width, self.mapSize_.height * self.tileSize_.height)
 end
 
+function Game:createPlayer(args)
+	local player = require("app.models.Player").new(args)
+	self.user_ = player
+
+	self.map_:addChild(player:getView(), 10)
+
+	return player
+end
+
 function Game:getPlayer()
-	-- body
+	return self.user_
 end
 
 function Game:addEntity()
 	
+end
+
+function Game:loadPathGrid_()
+	local layers = {
+		"sand objects",
+		"water",
+		"lakes",
+		"village boundaries",
+		"village boundaries lvl 2",
+		"river",
+		"Houses layer 2",
+		"Houses",
+		"Big Rocks",
+		"small rocks",
+		"graveyard",
+		"dead trees",
+		"camps",
+		"lava",
+		"canyon",
+		"Cliffs",
+		"Cliffs 2",
+		"totems",
+		"cactus",
+		"cave",
+		"lava boundaries",
+		"Trees2",
+		"caveriver",
+		"cavewalls",
+		"indoor",
+		"indoor objects",
+		"forest lakes",
+		"forest boundaries",
+		"forest trees",
+		"forest objects 1",
+		"forest objects 2",
+		"mase walls",
+		"sea",
+	}
+
+	for i,v in ipairs(layers) do
+		self:loadMapLayer_(v)
+	end
+end
+
+function Game:loadMapLayer_(layerName)
+	local layer = self.map_:getLayer(layerName)
+	if not layer then
+		return
+	end
+
+	local mapSize = self.mapSize_
+	local grid = self.pathGrid_
+	local line
+
+	for y = 1, mapSize.height do
+		grid[y] = grid[y] or {}
+		line = grid[y]
+		for x = 1, mapSize.width do
+			if 0 ~= layer:getTileGIDAt(cc.p(x - 1, y - 1)) then
+				line[x] = true
+				-- printInfo("tile pos (%d,%d)", x, y)
+			end
+		end
+	end
 end
 
 return Game

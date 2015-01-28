@@ -7,7 +7,7 @@ function MobDeathknight:ctor(args)
 	args.image = "deathknight.png"
 	args.type = Mob.TYPE_DEATHKNIGHT
 
-	self.super.ctro(self, args)
+	MobDeathknight.super.ctro(self, args)
 end
 
 return MobDeathknight

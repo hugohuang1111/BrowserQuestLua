@@ -7,7 +7,7 @@ function MobBat:ctor(args)
 	args.image = "bat.png"
 	args.type = Mob.TYPE_BAT
 
-	self.super.ctro(self, args)
+	MobBat.super.ctro(self, args)
 end
 
 return MobBat

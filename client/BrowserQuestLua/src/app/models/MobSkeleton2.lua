@@ -7,7 +7,7 @@ function MobSkeleton2:ctor(args)
 	args.image = "skeleton2.png"
 	args.type = Mob.TYPE_SKELETON2
 
-	self.super.ctro(self, args)
+	MobSkeleton2.super.ctro(self, args)
 end
 
 return MobSkeleton2

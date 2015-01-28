@@ -7,7 +7,7 @@ function MobSnake:ctor(args)
 	args.image = "snake.png"
 	args.type = Mob.TYPE_SNAKE
 
-	self.super.ctro(self, args)
+	MobSnake.super.ctro(self, args)
 end
 
 return MobSnake

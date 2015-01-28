@@ -2,7 +2,6 @@
 require("cocos.cocos2d.json")
 local Entity = class("Entity")
 local Utilitys = import(".Utilitys")
-local Direction = import(".Direction")
 local Game = import(".Game").getInstance()
 
 
@@ -103,46 +102,21 @@ function Entity:setType(entityType)
 end
 
 function Entity:play(actionName)
-	local frames = self:getFrames_(actionName)
+	local result = self:getFrames_(actionName)
+	local frames = result.frames
 	if not frames then
 		printError("Entity:play invalid action name:%s", actionName)
 	end
-	self.view_:playAnimationForever(display.newAnimation(frames, Entity.ANIMATION_DELAY))
+
+	local sp = self.view_:getChildByTag(Entity.VIEW_TAG_SPRITE)
+	sp:stopAllActions()
+
+	sp:setFlippedX(result.flip)
+	sp:playAnimationForever(display.newAnimation(frames, Entity.ANIMATION_DELAY))
 end
 
 function Entity:walk(pos)
 	-- body
-end
-
-function Entity:walkStep(dir)
-	if self.isWalking then
-		printInfo("Entity:walkStep is walking just return")
-		return
-	end
-
-	local pos
-	local cur = table.clone(self.curPos_)
-	if Direction.UP == dir then
-		cur.y = cur.y - 1
-	elseif Direction.DOWN == dir then
-		cur.y = cur.y + 1
-	elseif Direction.LEFT == dir then
-		cur.x = cur.x - 1
-	elseif Direction.RIGHT == dir then
-		cur.x = cur.x + 1
-	end
-
-	-- TODO check the cur pos is valid
-
-	pos = cur
-	local args = Utilitys.pos2px(pos)
-	args.time = Entity.ANIMATION_DELAY
-	args.onComplete = function()
-		self.isWalking = false
-	end
-	self.curPos_ = pos
-	self.isWalking = true
-	self.view_:moveTo(args)
 end
 
 function Entity:setMapPos(pos)
@@ -151,34 +125,47 @@ function Entity:setMapPos(pos)
 end
 
 function Entity:loadJson_()
-	local jsonFileName = "sprites/" .. string.gsub(self.imageName_, ".png", ".json")
-	local fileContent = cc.FileUtils:getInstance():getStringFromFile(jsonFileName)
-	self.json_ = json.decode(fileContent)
+	self.json_ = self:parseJson_(self.imageName_)
 end
 
 function Entity:getFrames_(aniType)
+	return self:parseFrames_(self.imageName_, self.json_, aniType)
+end
+
+function Entity:parseJson_(imageName)
+	local jsonFileName = "sprites/" .. string.gsub(imageName, ".png", ".json")
+	local fileContent = cc.FileUtils:getInstance():getStringFromFile(jsonFileName)
+	return json.decode(fileContent)
+end
+
+function Entity:parseFrames_(imageName, imageJson, aniType)
 	aniType = aniType or "idle"
 
-	local json = self.json_[aniType]
+	local json = imageJson["animations"][aniType]
+	local needFlip
 	if not json then
 		local spos, epos = string.find(aniType, "_")
 		if spos then
-			local newAniType = string.gsub(aniType, "(%a)", function(str)
+			local newAniType = string.gsub(aniType, "(%a*)", function(str)
 				if "left" == str then
+					needFlip = true
 					return "right"
 				elseif "right" == str then
+					needFlip = true
 					return "left"
 				elseif "up" == str then
+					needFlip = true
 					return "down"
 				elseif "down" == str then
+					needFlip = true
 					return "up"
 				end
 			end)
 
-			json = self.json_[newAniType]
+			json = imageJson["animations"][newAniType]
 		else
 			local newAniType = aniType .. "_down"
-			json = self.json_["animations"][newAniType]
+			json = imageJson["animations"][newAniType]
 		end
 	end
 	if not json then
@@ -186,9 +173,9 @@ function Entity:getFrames_(aniType)
 		return
 	end
 
-	local texture = display.loadImage(app:getResPath(self.imageName_))
-	local width = self.json_.width * app:getScale()
-	local height = self.json_.height * app:getScale()
+	local texture = display.loadImage(app:getResPath(imageName))
+	local width = imageJson.width * app:getScale()
+	local height = imageJson.height * app:getScale()
 
 	local frames = {}
 	for i=1,json.length do
@@ -197,7 +184,7 @@ function Entity:getFrames_(aniType)
         frames[#frames + 1] = frame
 	end
 
-	return frames
+	return {frames = frames, flip = needFlip}
 end
 
 
