@@ -29,6 +29,7 @@ function Game:setMap(map)
 	self.tileSize_ = tileSize --cc.size(tileSize.width * scale, tileSize.height * scale)
 
 	self:loadPathGrid_()
+	self:addGridLayer_()
 end
 
 function Game:getMap()
@@ -51,7 +52,7 @@ function Game:createPlayer(args)
 	local player = require("app.models.Player").new(args)
 	self.user_ = player
 
-	self.map_:addChild(player:getView(), 10)
+	self.map_:addChild(player:getView(), 200)
 
 	return player
 end
@@ -133,6 +134,31 @@ function Game:loadMapLayer_(layerName)
 			end
 		end
 	end
+end
+
+function Game:addGridLayer_()
+	local node = cc.DrawNode:create()
+
+	local startPoint = cc.p(0, 0)
+	local endPoint = cc.p(0, self.tileSize_.height*self.mapSize_.height)
+	for x=1,171 do
+		startPoint.x = x * self.tileSize_.width
+		endPoint.x = startPoint.x
+		node:drawLine(startPoint, endPoint, cc.c4f(1, 0, 0, 1))
+		for y=1,311 do
+			node:drawLine(startPoint, endPoint, cc.c4f(1, 0, 0, 1))
+		end
+	end
+
+	startPoint.x = 0
+	endPoint.x = self.tileSize_.width * self.mapSize_.width
+	for y = 1, 311 do
+		startPoint.y = y * self.tileSize_.height
+		endPoint.y = startPoint.y
+		node:drawLine(startPoint, endPoint, cc.c4f(1, 0, 0, 1))
+	end
+
+	self.map_:addChild(node, 99)
 end
 
 return Game

@@ -4,6 +4,8 @@ local Orientation = import(".Orientation")
 local Utilitys = import(".Utilitys")
 local Character = class("Character", Entity)
 
+Character.MOVE_STEP_TIME = 0.3
+
 function Character:ctor(args)
 	Character.super.ctor(self, args)
 	self.orientation_ = Orientation.DOWN
@@ -19,6 +21,10 @@ function Character:setWalkSpeed(speed)
 end
 
 function Character:walkTo(pos)
+	if not pos then
+		return
+	end
+
 	local orientation
 	if pos.x > self.curPos_.x then
 		orientation = Orientation.RIGHT
@@ -26,7 +32,7 @@ function Character:walkTo(pos)
 		orientation = Orientation.LEFT
 	elseif pos.y > self.curPos_.y then
 		orientation = Orientation.DOWN
-	elseif pos.x < self.curPos_.x then
+	elseif pos.y < self.curPos_.y then
 		orientation = Orientation.UP
 	else
 		-- the same, needn't walk
@@ -40,6 +46,10 @@ end
 function Character:walkPath(path)
 	if path[1].x == self.curPos_.x and path[1].y == self.curPos_.y then
 		table.remove(path, 1)
+	end
+
+	if #path < 1 then
+		return
 	end
 
 	self.path_ = path
@@ -72,7 +82,7 @@ function Character:walkStep(dir, step)
 
 	pos = cur
 	local args = Utilitys.pos2px(pos)
-	args.time = Entity.ANIMATION_DELAY * step
+	args.time = Character.MOVE_STEP_TIME * step
 	args.onComplete = handler(self, self.onWalkStepComplete_)
 	self.curPos_ = pos
 	self.isWalking_ = true
@@ -86,8 +96,7 @@ function Character:onWalkStepComplete_()
 	if 0 == #self.path_ then
 		self:playIdle()
 	else
-		local pos = table.remove(self.path_, 1)
-		self:walkTo(pos)
+		self:walkTo(table.remove(self.path_, 1))
 	end
 end
 

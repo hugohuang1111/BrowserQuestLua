@@ -58,14 +58,14 @@ function GameScene:createMap()
 	self.map_ = map
 
 	self.camera_ = Camera.new(map)
-	self.camera_:move(-12*14, (250 - 314)*14)
+	-- self.camera_:move(-12*14, (250 - 314)*14)
 
 	-- create player
 	local player = Game:createPlayer({
 		image = "clotharmor.png",
 		weaponName = "sword1.png"})
 	local view = player:getView()
-	player:setMapPos(cc.p(36, 230))
+	player:setMapPos(cc.p(6, 298))
 	player:play("idle")
 end
 

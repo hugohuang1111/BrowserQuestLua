@@ -92,7 +92,8 @@ function Entity:getView()
 	local texture = display.loadImage(app:getResPath(self.imageName_))
 	local frame = display.newSpriteFrame(texture,
 			cc.rect(0, 0, self.json_.width * app:getScale(), self.json_.height * app:getScale()))
-	display.newSprite(frame):align(display.CENTER_BOTTOM):addTo(self.view_, 1, Entity.VIEW_TAG_SPRITE)
+	display.newSprite(frame):addTo(self.view_, 1, Entity.VIEW_TAG_SPRITE)
+		-- :align(display.CENTER_BOTTOM)
 
 	return self.view_
 end
