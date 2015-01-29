@@ -26,7 +26,7 @@ function Player:changeCloth(name)
 	local texture = display.loadImage(app:getResPath(name))
 	local frame = display.newSpriteFrame(texture,
 			cc.rect(0, 0, self.json_.width * app:getScale(), self.json_.height * app:getScale()))
-	display.newSprite(frame):addTo(self.view_, 1, Player.VIEW_TAG_SPRITE)
+	display.newSprite(frame):align(display.CENTER_BOTTOM):addTo(self.view_, 1, Player.VIEW_TAG_SPRITE)
 end
 
 function Player:changeWeapon(name)
@@ -35,7 +35,7 @@ function Player:changeWeapon(name)
 	local texture = display.loadImage(app:getResPath(name))
 	local frame = display.newSpriteFrame(texture,
 			cc.rect(0, 0, self.json_.width * app:getScale(), self.json_.height * app:getScale()))
-	display.newSprite(frame):addTo(self.view_, 1, Player.VIEW_TAG_WEAPON)
+	display.newSprite(frame):align(display.CENTER_BOTTOM):addTo(self.view_, 1, Player.VIEW_TAG_WEAPON)
 	self.weaponName_ = name
 end
 

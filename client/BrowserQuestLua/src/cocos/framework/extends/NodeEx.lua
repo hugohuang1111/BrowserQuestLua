@@ -69,7 +69,7 @@ end
 function Node:move(x, y)
     if y then
         self:setPosition(x, y)
-    else
+    elseif x then
         self:setPosition(x)
     end
     return self

@@ -90,7 +90,6 @@ function Camera:move(disX, disY)
 		end
 	end
 
-	printInfo("pos x:%d y:%d", posX + disX, posY + disY)
 	self.map_:setPosition(posX + disX, posY + disY)
 end
 

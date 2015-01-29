@@ -1,5 +1,6 @@
 
 local Game = class("Game")
+local AStar = import(".AStar")
 local gInstance = nil
 
 Game.new_ = Game.new
@@ -30,6 +31,10 @@ function Game:setMap(map)
 	self:loadPathGrid_()
 end
 
+function Game:getMap()
+	return self.map_
+end
+
 function Game:getTileSize()
 	return self.tileSize_
 end
@@ -57,6 +62,13 @@ end
 
 function Game:addEntity()
 	
+end
+
+function Game:findPath(endPoint)
+	local startPoint = self.user_:getMapPos()
+	local path = AStar.findPath(startPoint, endPoint, self.pathGrid_, self.mapSize_.width, self.mapSize_.height)
+
+	return path
 end
 
 function Game:loadPathGrid_()

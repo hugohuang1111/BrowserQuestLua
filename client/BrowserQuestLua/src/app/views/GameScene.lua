@@ -3,6 +3,7 @@ local Game = import("..models.Game").getInstance()
 local Camera = import("..models.Camera")
 local Entity = import("..models.Entity")
 local Orientation = import("..models.Orientation")
+local Utilitys = import("..models.Utilitys")
 local GameScene = class("GameScene", cc.load("mvc").ViewBase)
 local Scheduler = cc.Director:getInstance():getScheduler()
 
@@ -75,11 +76,31 @@ end
 
 function GameScene:onTouchMoved(touch, event)
 	local diff = touch:getDelta()
-	self.camera_:move(diff.x, diff.y)
+
+	local dis = diff.x * diff.x + diff.y * diff.y
+	if dis > 50 then
+		self.isMoving = true
+		self.camera_:move(diff.x, diff.y)
+	end
 end
 
 function GameScene:onTouchEnded(touch, event)
-	-- body
+	if self.isMoving then
+		self.isMoving = false
+		return
+	end
+
+	local pos = touch:getLocation()
+	local mapPospx = Game:getMap():convertToNodeSpace(pos)
+	local mapPos = Utilitys.px2pos(mapPospx)
+
+	local path = Game:findPath(mapPos)
+	if path then
+		Game:getPlayer():walkPath(path)
+		-- local drawNode = Utilitys.genPathNode(path)
+		-- Game:getMap():removeChildByTag(111)
+		-- Game:getMap():addChild(drawNode, 100, 111)
+	end
 end
 
 function GameScene:onKeyPressed(keyCode, event)
@@ -107,5 +128,6 @@ function GameScene:onKeyReleased(keyCode, event)
 		print("keyCode:" .. keyCode)
 	end
 end
+
 
 return GameScene

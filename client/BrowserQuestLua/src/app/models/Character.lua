@@ -18,41 +18,77 @@ function Character:setWalkSpeed(speed)
 	self.walkSpeed_ = speed
 end
 
-function Character:walkTo()
+function Character:walkTo(pos)
+	local orientation
+	if pos.x > self.curPos_.x then
+		orientation = Orientation.RIGHT
+	elseif pos.x < self.curPos_.x then
+		orientation = Orientation.LEFT
+	elseif pos.y > self.curPos_.y then
+		orientation = Orientation.DOWN
+	elseif pos.x < self.curPos_.x then
+		orientation = Orientation.UP
+	else
+		-- the same, needn't walk
+		print("Character:walkTo is same")
+		return
+	end
 
+	self:walkStep(orientation)
 end
 
-function Character:walkStep(dir)
-	if self.isWalking then
+function Character:walkPath(path)
+	if path[1].x == self.curPos_.x and path[1].y == self.curPos_.y then
+		table.remove(path, 1)
+	end
+
+	self.path_ = path
+
+	if not self.isWalking_ then
+		self:walkTo(table.remove(self.path_, 1))
+	end
+end
+
+function Character:walkStep(dir, step)
+	if self.isWalking_ then
 		printInfo("Entity:walkStep is walking just return")
 		return
 	end
 
 	local pos
 	local cur = clone(self.curPos_)
+	step = step or 1
 	if Orientation.UP == dir then
-		cur.y = cur.y - 1
+		cur.y = cur.y - step
 	elseif Orientation.DOWN == dir then
-		cur.y = cur.y + 1
+		cur.y = cur.y + step
 	elseif Orientation.LEFT == dir then
-		cur.x = cur.x - 1
+		cur.x = cur.x - step
 	elseif Orientation.RIGHT == dir then
-		cur.x = cur.x + 1
+		cur.x = cur.x + step
 	end
 
 	-- TODO check the cur pos is valid
 
 	pos = cur
 	local args = Utilitys.pos2px(pos)
-	args.time = Entity.ANIMATION_DELAY
-	args.onComplete = function()
-		self.isWalking = false
-		self:playIdle()
-	end
+	args.time = Entity.ANIMATION_DELAY * step
+	args.onComplete = handler(self, self.onWalkStepComplete_)
 	self.curPos_ = pos
-	self.isWalking = true
+	self.isWalking_ = true
 	self.view_:moveTo(args)
 	self:playWalk(dir)
+end
+
+function Character:onWalkStepComplete_()
+	self.isWalking_ = false
+
+	if 0 == #self.path_ then
+		self:playIdle()
+	else
+		local pos = table.remove(self.path_, 1)
+		self:walkTo(pos)
+	end
 end
 
 function Character:playWalk(orientation)
