@@ -5,7 +5,8 @@ local Utilitys = import(".Utilitys")
 local Game = import(".Game").getInstance()
 
 
-Entity.ANIMATION_DELAY = 0.2
+Entity.ANIMATION_IDLE_TIME = 0.2 	-- idle animation frame time
+Entity.ANIMATION_MOVE_TIME = 0.1 	-- move animation frame time
 
 
 Entity.TYPE_NONE = 0
@@ -72,11 +73,60 @@ Entity.TYPE_BLUESWORD = 507
 
 Entity.VIEW_TAG_SPRITE = 101
 
+Entity.ANCHOR = cc.p(0.5, 0.3)
+
 
 function Entity:ctor(args)
 	self.imageName_ = args.image
 	self.id = 0
 	self.type_ = 0
+
+	cc.bind(self, "event")
+	self:bindStateMachine_(args.states)
+end
+
+function Entity:bindStateMachine_(states)
+	local baseState = {
+		event = {
+			{name = "start",  from = "none",   to = "idle" },
+			{name = "kill",  from = "idle",   to = "death" }
+		},
+
+		callbacks = {
+			onbeforeevent = handler(self, self.onBeforeEvent),
+			onafterevent = handler(self, self.onAfterEvent),
+			onenterstate = handler(self, self.onEnterState),
+			onleavestate = handler(self, self.onLeaveState),
+			onchangestate = handler(self, self.onChangeState)
+		}
+	}
+
+	self.fsm_ = {}
+	cc.load("statemachine")
+	cc.bind(self.fsm_, "statemachine")
+
+	self.fsm_:setupState(states)
+}
+end
+
+function Entity:onBeforeEvent(event)
+	-- body
+end
+
+function Entity:onAfterEvent(event)
+	-- body
+end
+
+function Entity:onEnterState(event)
+	-- body
+end
+
+function Entity:onLeaveState(event)
+	-- body
+end
+
+function Entity:onChangeState(event)
+	-- body
 end
 
 function Entity:getView()
@@ -93,7 +143,7 @@ function Entity:getView()
 	local frame = display.newSpriteFrame(texture,
 			cc.rect(0, 0, self.json_.width * app:getScale(), self.json_.height * app:getScale()))
 	display.newSprite(frame):addTo(self.view_, 1, Entity.VIEW_TAG_SPRITE)
-		-- :align(display.CENTER_BOTTOM)
+		:align(Entity.ANCHOR)
 
 	return self.view_
 end
@@ -113,7 +163,25 @@ function Entity:play(actionName)
 	sp:stopAllActions()
 
 	sp:setFlippedX(result.flip)
-	sp:playAnimationForever(display.newAnimation(frames, Entity.ANIMATION_DELAY))
+	sp:playAnimationForever(display.newAnimation(frames, self:getAnimationTime(actionName)))
+end
+
+function Entity:getAnimationTime(actionName)
+	local pos = string.find(actionName, "_")
+	local action
+	if pos then
+		action = string.sub(actionName, 1, pos - 1)
+	end
+
+	if "idle" == action then
+		return Entity.ANIMATION_IDLE_TIME
+	elseif "walk" == action then
+		return Entity.ANIMATION_MOVE_TIME
+	elseif "atk" == action then
+		return Entity.ANIMATION_MOVE_TIME
+	else
+		return Entity.ANIMATION_IDLE_TIME
+	end
 end
 
 function Entity:walk(pos)

@@ -27,7 +27,7 @@ function Player:changeCloth(name)
 	local frame = display.newSpriteFrame(texture,
 			cc.rect(0, 0, self.json_.width * app:getScale(), self.json_.height * app:getScale()))
 	display.newSprite(frame):addTo(self.view_, 1, Player.VIEW_TAG_SPRITE)
-		-- :align(display.CENTER_BOTTOM)
+		:align(Character.ANCHOR)
 end
 
 function Player:changeWeapon(name)
@@ -37,7 +37,7 @@ function Player:changeWeapon(name)
 	local frame = display.newSpriteFrame(texture,
 			cc.rect(0, 0, self.json_.width * app:getScale(), self.json_.height * app:getScale()))
 	display.newSprite(frame):addTo(self.view_, 1, Player.VIEW_TAG_WEAPON)
-		-- :align(display.CENTER_BOTTOM)
+		:align(Character.ANCHOR)
 	self.weaponName_ = name
 end
 
@@ -52,14 +52,14 @@ function Player:play(actionName)
 	local sp = self.view_:getChildByTag(Player.VIEW_TAG_SPRITE)
 	sp:setFlippedX(result.flip)
 	sp:stopAllActions()
-	sp:playAnimationForever(display.newAnimation(frames, Player.ANIMATION_DELAY))
+	sp:playAnimationForever(display.newAnimation(frames, self:getAnimationTime(actionName)))
 
 	if weaponFrames then
 		sp = self.view_:getChildByTag(Player.VIEW_TAG_WEAPON)
 		if sp then
 			sp:setFlippedX(resultWeapon.flip)
 			sp:stopAllActions()
-			sp:playAnimationForever(display.newAnimation(weaponFrames, Player.ANIMATION_DELAY))
+			sp:playAnimationForever(display.newAnimation(weaponFrames, self:getAnimationTime(actionName)))
 		end
 	end
 end

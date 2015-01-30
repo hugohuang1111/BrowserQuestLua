@@ -7,6 +7,7 @@ local Utilitys = import("..models.Utilitys")
 local GameScene = class("GameScene", cc.load("mvc").ViewBase)
 local Scheduler = cc.Director:getInstance():getScheduler()
 
+cc.exports.Game = Game
 
 function GameScene:onCreate()
 	-- self:createUI()

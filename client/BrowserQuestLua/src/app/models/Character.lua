@@ -6,10 +6,24 @@ local Character = class("Character", Entity)
 
 Character.MOVE_STEP_TIME = 0.3
 
+Character.PATH_FINISH = "pathingFinish"
+
 function Character:ctor(args)
 	Character.super.ctor(self, args)
 	self.orientation_ = Orientation.DOWN
 	self.path_ = {}
+end
+
+function Character:bindStateMachine()
+	self.fsm_ = {}
+	cc.load("statemachine")
+	cc.bind(self.fsm_, "statemachine")
+
+	local args = {
+		event = {
+			{name = "none", }
+	}
+}
 end
 
 function Character:setAttackSpeed(speed)
@@ -25,16 +39,8 @@ function Character:walkTo(pos)
 		return
 	end
 
-	local orientation
-	if pos.x > self.curPos_.x then
-		orientation = Orientation.RIGHT
-	elseif pos.x < self.curPos_.x then
-		orientation = Orientation.LEFT
-	elseif pos.y > self.curPos_.y then
-		orientation = Orientation.DOWN
-	elseif pos.y < self.curPos_.y then
-		orientation = Orientation.UP
-	else
+	local orientation = Utilitys.getOrientation(self.curPos_, pos)
+	if not orientation then
 		-- the same, needn't walk
 		print("Character:walkTo is same")
 		return
@@ -94,10 +100,18 @@ function Character:onWalkStepComplete_()
 	self.isWalking_ = false
 
 	if 0 == #self.path_ then
+		if self.onPathingFinish_ then
+			self.onPathingFinish_()
+		end
 		self:playIdle()
 	else
 		self:walkTo(table.remove(self.path_, 1))
 	end
+end
+
+function Character:onPathingFinish(callback)
+	self.onPathingFinish_ = self.onPathingFinish_ or {}
+	self.onPathingFinish_ = callback
 end
 
 function Character:playWalk(orientation)
@@ -126,5 +140,25 @@ function Character:playIdle(orientation)
 		self:play("idle_right")
 	end
 end
+
+function Character:fllow(entity)
+	self.fllowEntity_ = entity
+	local pos = entity:getMapPos()
+	local path = Game:findPath(pos)
+	self.walkPath(path)
+
+	entity:on(Character.PATH_FINISH, function(event)
+		self:fllow(event.target)
+	end)
+end
+
+function Character:lookAt(entity)
+	if not self.isWalking_ then
+	end
+
+	local orientation = Utilitys.getOrientation(self.curPos_, entity:getMapPos())
+	self:playIdle(orientation)
+end
+
 
 return Character

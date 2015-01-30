@@ -69,6 +69,32 @@ function Game:findPath(endPoint)
 	local startPoint = self.user_:getMapPos()
 	local path = AStar.findPath(startPoint, endPoint, self.pathGrid_, self.mapSize_.width, self.mapSize_.height)
 
+	if not path then
+		path = self:findIncompletePath_(endPoint)
+	end
+
+	return path
+end
+
+function Game:findIncompletePath_(endPoint)
+	local startPoint = self.user_:getMapPos()
+	local perfectPath = AStar.findPath(startPoint, endPoint, nil, self.mapSize_.width, self.mapSize_.height)
+	if not perfectPath then
+		return
+	end
+
+	local pos
+	local path
+	for i = #perfectPath, 1, -1 do
+		pos = perfectPath[i]
+		if not self.pathGrid_[pos.y][pos.x] then
+			path = AStar.findPath(startPoint, pos, self.pathGrid_, self.mapSize_.width, self.mapSize_.height)
+			if path then
+				break
+			end
+		end
+	end
+
 	return path
 end
 

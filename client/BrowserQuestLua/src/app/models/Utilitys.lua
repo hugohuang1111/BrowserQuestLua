@@ -16,6 +16,21 @@ function Utilitys.px2pos(posPx)
 	return cc.p(math.ceil(posPx.x/tileSize.width), mapSize.height + 1 - math.ceil(posPx.y/tileSize.height))
 end
 
+function Utilitys.getOrientation(base, other)
+	local orientation
+	if other.x > base.x then
+		orientation = Orientation.RIGHT
+	elseif other.x < base.x then
+		orientation = Orientation.LEFT
+	elseif other.y < base.y then
+		orientation = Orientation.UP
+	elseif other.y > base.y then
+		orientation = Orientation.DOWN
+	else
+
+	return orientation
+end
+
 function Utilitys.genPathNode(path)
 	local node = cc.DrawNode:create()
 	local startPoint

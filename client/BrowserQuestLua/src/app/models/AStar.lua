@@ -98,7 +98,7 @@ function AStar.addPointIf(p, parent, endPoint, grid, width, height)
 
 	-- printInfo("grid (%d,%d) %s", p.x, p.y, tostring(grid[p.y][p.x]))
 	-- dump(grid[p.y], "line:")
-	if grid[p.y][p.x] then
+	if grid and grid[p.y][p.x] then
 		return
 	end
 
