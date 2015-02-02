@@ -7,7 +7,7 @@ function MobWizard:ctor(args)
 	args.image = "wizard.png"
 	args.type = Mob.TYPE_WIZARD
 
-	MobWizard.super.ctro(self, args)
+	MobWizard.super.ctor(self, args)
 end
 
 return MobWizard

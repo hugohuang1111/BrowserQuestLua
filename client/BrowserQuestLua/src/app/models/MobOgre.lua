@@ -7,7 +7,7 @@ function MobOgre:ctor(args)
 	args.image = "ogre.png"
 	args.type = Mob.TYPE_OGRE
 
-	MobOgre.super.ctro(self, args)
+	MobOgre.super.ctor(self, args)
 end
 
 return MobOgre

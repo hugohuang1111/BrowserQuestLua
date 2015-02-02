@@ -1,2 +1,4 @@
 
-return import(".StateMachine")
+local m = import(".StateMachine")
+
+return m

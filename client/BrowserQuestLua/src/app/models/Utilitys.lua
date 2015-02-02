@@ -1,6 +1,7 @@
 
+local Orientation = import(".Orientation")
 local Utilitys = {}
-local Game = import(".Game").getInstance()
+
 
 function Utilitys.pos2px(pos)
 	local tileSize = Game:getTileSize()
@@ -26,7 +27,7 @@ function Utilitys.getOrientation(base, other)
 		orientation = Orientation.UP
 	elseif other.y > base.y then
 		orientation = Orientation.DOWN
-	else
+	end
 
 	return orientation
 end

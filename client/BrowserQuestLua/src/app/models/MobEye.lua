@@ -7,7 +7,7 @@ function MobEye:ctor(args)
 	args.image = "eye.png"
 	args.type = Mob.TYPE_EYE
 
-	MobEye.super.ctro(self, args)
+	MobEye.super.ctor(self, args)
 end
 
 return MobEye

@@ -16,6 +16,7 @@ end
 
 function Game:ctor()
 	self.pathGrid_ = {}
+	self.entitys_ = {}
 end
 
 function Game:setMap(map)
@@ -29,7 +30,9 @@ function Game:setMap(map)
 	self.tileSize_ = tileSize --cc.size(tileSize.width * scale, tileSize.height * scale)
 
 	self:loadPathGrid_()
-	self:addGridLayer_()
+
+	-- debug
+	-- self:addGridLayer_()
 end
 
 function Game:getMap()
@@ -52,7 +55,8 @@ function Game:createPlayer(args)
 	local player = require("app.models.Player").new(args)
 	self.user_ = player
 
-	self.map_:addChild(player:getView(), 200)
+	self.map_:addChild(player:getView(), 201)
+	self:addEntity(player)
 
 	return player
 end
@@ -61,12 +65,32 @@ function Game:getPlayer()
 	return self.user_
 end
 
-function Game:addEntity()
-	
+function Game:addMob(mob)
+	self.map_:addChild(mob:getView(), 200)
+	self:addEntity(mob)
 end
 
-function Game:findPath(endPoint)
-	local startPoint = self.user_:getMapPos()
+function Game:addEntity(entity)
+	self.entitys_[entity:getIdx()] = entity
+end
+
+function Game:removeEntity(entity)
+	self.entitys_[entity:getIdx()] = nil
+end
+
+function Game:findEntityByPos(p)
+	local entitys = {}
+	for k, v in pairs(self.entitys_) do
+		if v.curPos_.x == p.x and v.curPos_.y == p.y then
+			table.insert(entitys, v)
+		end
+	end
+
+	return entitys
+end
+
+function Game:findPath(endPoint, startPoint)
+	startPoint = startPoint or self.user_:getMapPos()
 	local path = AStar.findPath(startPoint, endPoint, self.pathGrid_, self.mapSize_.width, self.mapSize_.height)
 
 	if not path then

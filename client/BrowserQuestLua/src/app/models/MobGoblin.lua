@@ -7,7 +7,7 @@ function MobGoblin:ctor(args)
 	args.image = "goblin.png"
 	args.type = Mob.TYPE_GOBLIN
 
-	MobGoblin.super.ctro(self, args)
+	MobGoblin.super.ctor(self, args)
 end
 
 return MobGoblin

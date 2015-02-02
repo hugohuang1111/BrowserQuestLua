@@ -18,9 +18,9 @@ function AStar.findPath(s, e, g, w, h)
 	local EndPoint
 	local isFindPath
 
-	dump(startPoint, "startPoint:")
-	dump(endPoint, "endPoint:")
-	printInfo("width:%d, height:%d", width, height)
+	-- dump(startPoint, "startPoint:")
+	-- dump(endPoint, "endPoint:")
+	-- printInfo("width:%d, height:%d", width, height)
 
 	-- local temp = {x = 312, y = 1}
 	-- printInfo("312,1  %s", tostring(grid[temp.x][temp.y]))

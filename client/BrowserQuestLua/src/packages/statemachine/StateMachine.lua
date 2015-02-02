@@ -35,7 +35,6 @@ StateMachine.WILDCARD = "*"
 StateMachine.ASYNC = "ASYNC"
 
 function StateMachine:ctor()
-    StateMachine.super.ctor(self, "StateMachine")
 end
 
 function StateMachine:setupState(cfg)

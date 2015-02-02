@@ -5,8 +5,9 @@ local Player = class("Player", Character)
 Player.VIEW_TAG_WEAPON = 102
 
 function Player:ctor(args)
-	Player.super.ctor(self, args)
 	self.weaponName_ = args.weaponName
+	
+	Player.super.ctor(self, args)
 end
 
 function Player:getView()
@@ -41,10 +42,10 @@ function Player:changeWeapon(name)
 	self.weaponName_ = name
 end
 
-function Player:play(actionName)
+function Player:play(actionName, args)
 	local result, resultWeapon = self:getFrames_(actionName)
 	local frames = result.frames
-	local weaponFrames = result.frames
+	local weaponFrames = resultWeapon.frames
 	if not frames then
 		printError("Player:play invalid action name:%s", actionName)
 	end
@@ -52,16 +53,28 @@ function Player:play(actionName)
 	local sp = self.view_:getChildByTag(Player.VIEW_TAG_SPRITE)
 	sp:setFlippedX(result.flip)
 	sp:stopAllActions()
-	sp:playAnimationForever(display.newAnimation(frames, self:getAnimationTime(actionName)))
+	if args and args.isOnce then
+		args.isOnce = false  -- remove used params
+		sp:playAnimationOnce(display.newAnimation(frames, self:getAnimationTime(actionName)), args)
+	else
+		sp:playAnimationForever(display.newAnimation(frames, self:getAnimationTime(actionName)), args)
+	end
 
 	if weaponFrames then
 		sp = self.view_:getChildByTag(Player.VIEW_TAG_WEAPON)
 		if sp then
 			sp:setFlippedX(resultWeapon.flip)
 			sp:stopAllActions()
-			sp:playAnimationForever(display.newAnimation(weaponFrames, self:getAnimationTime(actionName)))
+			if args and args.isOnce then
+				args.isOnce = false  -- remove used params
+				sp:playAnimationOnce(display.newAnimation(weaponFrames, self:getAnimationTime(actionName)), args)
+			else
+				sp:playAnimationForever(display.newAnimation(weaponFrames, self:getAnimationTime(actionName)), args)
+			end
 		end
 	end
+
+	
 end
 
 function Player:loadJson_()

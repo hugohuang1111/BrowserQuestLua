@@ -4,9 +4,11 @@ local Entity = class("Entity")
 local Utilitys = import(".Utilitys")
 local Game = import(".Game").getInstance()
 
+Entity.idx_ = 1
 
 Entity.ANIMATION_IDLE_TIME = 0.2 	-- idle animation frame time
 Entity.ANIMATION_MOVE_TIME = 0.1 	-- move animation frame time
+Entity.ANIMATION_ATK_TIME  = 0.1 	-- attack animation frame time
 
 
 Entity.TYPE_NONE = 0
@@ -79,17 +81,27 @@ Entity.ANCHOR = cc.p(0.5, 0.3)
 function Entity:ctor(args)
 	self.imageName_ = args.image
 	self.id = 0
+	self.idx_ = Entity.idx_
+	Entity.idx_ = Entity.idx_ + 1
 	self.type_ = 0
 
 	cc.bind(self, "event")
+	self:getView() -- create view
+
 	self:bindStateMachine_(args.states)
 end
 
+function Entity:getIdx()
+	return self.idx_
+end
+
 function Entity:bindStateMachine_(states)
+	local sm = cc.load("statemachine")
+
 	local baseState = {
-		event = {
-			{name = "start",  from = "none",   to = "idle" },
-			{name = "kill",  from = "idle",   to = "death" }
+		events = {
+			{name = "born",		from = "none",   		to = "idle" },
+			{name = "kill",   	from = sm.WILDCARD,   	to = "death" }
 		},
 
 		callbacks = {
@@ -101,12 +113,19 @@ function Entity:bindStateMachine_(states)
 		}
 	}
 
+	states = states or baseState
+	states.callbacks = states.callbacks or {}
+	states.callbacks.onbeforeevent = baseState.callbacks.onbeforeevent
+	states.callbacks.onafterevent = baseState.callbacks.onafterevent
+	states.callbacks.onenterstate = baseState.callbacks.onenterstate
+	states.callbacks.onleavestate = baseState.callbacks.onleavestate
+	states.callbacks.onchangestate = baseState.callbacks.onchangestate
+
 	self.fsm_ = {}
-	cc.load("statemachine")
 	cc.bind(self.fsm_, "statemachine")
 
 	self.fsm_:setupState(states)
-}
+	self:doEvent("born")
 end
 
 function Entity:onBeforeEvent(event)
@@ -114,11 +133,28 @@ function Entity:onBeforeEvent(event)
 end
 
 function Entity:onAfterEvent(event)
-	-- body
+	local isHandle = true
+	if "idle" == event.to then
+		self:play("idle")
+	elseif "walk" == event.to then
+		self:playWalk(self.orientation_)
+	elseif "death" == event.to then
+		self:play("death",
+			{
+				removeSelf = true,
+				onComplete = function()
+					Game:removeEntity(self)
+				end,
+				isOnce = true
+			})
+	else
+		isHandle = false
+	end
+
+	return isHandle
 end
 
 function Entity:onEnterState(event)
-	-- body
 end
 
 function Entity:onLeaveState(event)
@@ -127,6 +163,12 @@ end
 
 function Entity:onChangeState(event)
 	-- body
+end
+
+function Entity:doEvent(eventName)
+	if self.fsm_:canDoEvent(eventName) then
+		self.fsm_:doEvent(eventName)
+	end
 end
 
 function Entity:getView()
@@ -143,7 +185,7 @@ function Entity:getView()
 	local frame = display.newSpriteFrame(texture,
 			cc.rect(0, 0, self.json_.width * app:getScale(), self.json_.height * app:getScale()))
 	display.newSprite(frame):addTo(self.view_, 1, Entity.VIEW_TAG_SPRITE)
-		:align(Entity.ANCHOR)
+		:align(self.ANCHOR)
 
 	return self.view_
 end
@@ -152,7 +194,7 @@ function Entity:setType(entityType)
 	self.type_ = entityType
 end
 
-function Entity:play(actionName)
+function Entity:play(actionName, args)
 	local result = self:getFrames_(actionName)
 	local frames = result.frames
 	if not frames then
@@ -163,7 +205,12 @@ function Entity:play(actionName)
 	sp:stopAllActions()
 
 	sp:setFlippedX(result.flip)
-	sp:playAnimationForever(display.newAnimation(frames, self:getAnimationTime(actionName)))
+	if args and args.isOnce then
+		args.isOnce = false  -- remove used params
+		sp:playAnimationOnce(display.newAnimation(frames, self:getAnimationTime(actionName)), args)
+	else
+		sp:playAnimationForever(display.newAnimation(frames, self:getAnimationTime(actionName)), args)
+	end
 end
 
 function Entity:getAnimationTime(actionName)
@@ -174,13 +221,13 @@ function Entity:getAnimationTime(actionName)
 	end
 
 	if "idle" == action then
-		return Entity.ANIMATION_IDLE_TIME
+		return self.ANIMATION_IDLE_TIME
 	elseif "walk" == action then
-		return Entity.ANIMATION_MOVE_TIME
+		return self.ANIMATION_MOVE_TIME
 	elseif "atk" == action then
-		return Entity.ANIMATION_MOVE_TIME
+		return self.ANIMATION_ATK_TIME
 	else
-		return Entity.ANIMATION_IDLE_TIME
+		return self.ANIMATION_IDLE_TIME
 	end
 end
 

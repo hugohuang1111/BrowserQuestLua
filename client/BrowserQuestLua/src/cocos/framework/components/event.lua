@@ -2,6 +2,7 @@
 local Event = class("Event")
 
 local EXPORTED_METHODS = {
+    "on",
     "addEventListener",
     "dispatchEvent",
     "removeEventListener",

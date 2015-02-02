@@ -67,7 +67,12 @@ function GameScene:createMap()
 		weaponName = "sword1.png"})
 	local view = player:getView()
 	player:setMapPos(cc.p(6, 298))
-	player:play("idle")
+
+	local rat = require("app.models.MobRat").new({
+		image = "rat.png"
+		})
+	rat:setMapPos(cc.p(17, 288))
+	Game:addMob(rat)
 end
 
 
@@ -95,12 +100,19 @@ function GameScene:onTouchEnded(touch, event)
 	local mapPospx = Game:getMap():convertToNodeSpace(pos)
 	local mapPos = Utilitys.px2pos(mapPospx)
 
-	local path = Game:findPath(mapPos)
-	if path then
-		Game:getPlayer():walkPath(path)
-		-- local drawNode = Utilitys.genPathNode(path)
-		-- Game:getMap():removeChildByTag(111)
-		-- Game:getMap():addChild(drawNode, 100, 111)
+	local entitys = Game:findEntityByPos(mapPos)
+	local entity = entitys[1]
+
+	if entity then
+		Game:getPlayer():attack(entity)
+	else
+		local path = Game:findPath(mapPos)
+		if path then
+			Game:getPlayer():walkPath(path)
+			-- local drawNode = Utilitys.genPathNode(path)
+			-- Game:getMap():removeChildByTag(111)
+			-- Game:getMap():addChild(drawNode, 100, 111)
+		end
 	end
 end
 

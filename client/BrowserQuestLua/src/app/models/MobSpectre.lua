@@ -7,7 +7,7 @@ function MobSpectre:ctor(args)
 	args.image = "spectre.png"
 	args.type = Mob.TYPE_SPECTRE
 
-	MobSpectre.super.ctro(self, args)
+	MobSpectre.super.ctor(self, args)
 end
 
 return MobSpectre

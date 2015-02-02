@@ -5,25 +5,51 @@ local Utilitys = import(".Utilitys")
 local Character = class("Character", Entity)
 
 Character.MOVE_STEP_TIME = 0.3
+Character.COOL_DOWN_TIME = 0.3
 
 Character.PATH_FINISH = "pathingFinish"
 
 function Character:ctor(args)
-	Character.super.ctor(self, args)
+	local sm = cc.load("statemachine")
+	args.states = {
+		events = {
+			{name = "born",		from = "none",   		to = "idle" },
+			{name = "move",		from = {"idle", "walk"},to = "walk" },
+			{name = "attack",	from = "idle",   		to = "atk" },
+			{name = "stop",		from = {"walk", "atk"}, to = "idle" },
+			{name = "kill",   	from = sm.WILDCARD,   	to = "death" }
+		}
+	}
+	
 	self.orientation_ = Orientation.DOWN
 	self.path_ = {}
+	Character.super.ctor(self, args)
 end
 
-function Character:bindStateMachine()
-	self.fsm_ = {}
-	cc.load("statemachine")
-	cc.bind(self.fsm_, "statemachine")
+function Character:doEvent(eventName, orientation)
+	if self.fsm_:canDoEvent(eventName) then
 
-	local args = {
-		event = {
-			{name = "none", }
-	}
-}
+		self.orientation_ = orientation or self.orientation_
+		self.fsm_:doEvent(eventName)
+	end
+end
+
+function Character:onAfterEvent(event)
+	local bHandler = true
+
+	if "walk" == event.to then
+		self:playWalk(self.orientation_)
+	elseif "idle" == event.to then
+		self:playIdle()
+	elseif "atk" == event.to then
+		self:playAtk()
+	else
+		bHandler = false
+	end
+
+	if not bHandler then
+		Character.super.onAfterEvent(self, event)
+	end
 end
 
 function Character:setAttackSpeed(speed)
@@ -32,6 +58,11 @@ end
 
 function Character:setWalkSpeed(speed)
 	self.walkSpeed_ = speed
+end
+
+function Character:walkPos(pos)
+	local path = Game:findPath(pos, self.curPos_)
+	self:walkPath(path)
 end
 
 function Character:walkTo(pos)
@@ -93,7 +124,8 @@ function Character:walkStep(dir, step)
 	self.curPos_ = pos
 	self.isWalking_ = true
 	self.view_:moveTo(args)
-	self:playWalk(dir)
+
+	self:doEvent("move", dir)
 end
 
 function Character:onWalkStepComplete_()
@@ -103,9 +135,20 @@ function Character:onWalkStepComplete_()
 		if self.onPathingFinish_ then
 			self.onPathingFinish_()
 		end
-		self:playIdle()
+		self:doEvent("stop")
 	else
-		self:walkTo(table.remove(self.path_, 1))
+		if self.fllowEntity_ then
+			local dis = self:distanceWith(self.fllowEntity_)
+			if dis > 1 then
+				self:walkTo(table.remove(self.path_, 1))
+			elseif 1 == dis then
+				self:doEvent("stop")
+				self:lookAt(self.fllowEntity_)
+				self:attack()
+			end
+		else
+			self:walkTo(table.remove(self.path_, 1))
+		end
 	end
 end
 
@@ -115,8 +158,7 @@ function Character:onPathingFinish(callback)
 end
 
 function Character:playWalk(orientation)
-	orientation = orientation or self.orientation_
-	self.orientation_ = orientation
+	local orientation = self.orientation_
 	if Orientation.UP == orientation then
 		self:play("walk_up")
 	elseif Orientation.DOWN == orientation then
@@ -129,7 +171,7 @@ function Character:playWalk(orientation)
 end
 
 function Character:playIdle(orientation)
-	orientation = orientation or self.orientation_
+	local orientation = orientation or self.orientation_
 	if Orientation.UP == orientation then
 		self:play("idle_up")
 	elseif Orientation.DOWN == orientation then
@@ -141,15 +183,43 @@ function Character:playIdle(orientation)
 	end
 end
 
-function Character:fllow(entity)
-	self.fllowEntity_ = entity
-	local pos = entity:getMapPos()
-	local path = Game:findPath(pos)
-	self.walkPath(path)
+function Character:playAtk(orientation)
+	local args = {
+		isOnce = true,
+		onComplete = function()
+			print("attack finish")
+			self.isCoolDown = true
+			self:doEvent("stop")
+			local handler
+			handler = cc.Director:getInstance():getScheduler():scheduleScriptFunc(function()
+				cc.Director:getInstance():getScheduler():unscheduleScriptEntry(handler)
+				self.isCoolDown = false
+				self:attack()
+			end, self.COOL_DOWN_TIME, false)
+		end}
+	local orientation = orientation or self.orientation_
+	if Orientation.UP == orientation then
+		self:play("atk_up", args)
+	elseif Orientation.DOWN == orientation then
+		self:play("atk_down", args)
+	elseif Orientation.LEFT == orientation then
+		self:play("atk_left", args)
+	elseif Orientation.RIGHT == orientation then
+		self:play("atk_right", args)
+	end
+end
 
-	entity:on(Character.PATH_FINISH, function(event)
-		self:fllow(event.target)
-	end)
+function Character:fllow(entity)	
+	self.fllowEntity_ = entity or self.fllowEntity_
+
+	if not self.fllowEntity_ then
+		return
+	end
+
+	if self:distanceWith(self.fllowEntity_) > 1 then
+		local pos = self.fllowEntity_:getMapPos()
+		self:walkPos(pos)
+	end
 end
 
 function Character:lookAt(entity)
@@ -157,7 +227,31 @@ function Character:lookAt(entity)
 	end
 
 	local orientation = Utilitys.getOrientation(self.curPos_, entity:getMapPos())
-	self:playIdle(orientation)
+	self.orientation_ = orientation or self.orientation_
+end
+
+function Character:distanceWith(entity)
+	local disX = math.abs(entity.curPos_.x - self.curPos_.x)
+	local disY = math.abs(entity.curPos_.y - self.curPos_.y)
+
+	return disX + disY
+end
+
+function Character:attack(entity)
+	self:fllow(entity)
+	self.attackEntity_ = entity or self.attackEntity_
+
+	if not self.fllowEntity_ then
+		return
+	end
+
+	if 1 == self:distanceWith(self.attackEntity_) then
+		if not self.isCoolDown then
+			self:doEvent("attack", Utilitys.getOrientation(self.curPos_, self.attackEntity_:getMapPos()))
+		else
+			print("Character:attack in cool down time")
+		end
+	end
 end
 
 

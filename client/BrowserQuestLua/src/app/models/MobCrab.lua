@@ -6,7 +6,7 @@ function MobCrab:ctor(args)
 	args = args or {}
 	args.image = "crab.png"
 	args.type = Mob.TYPE_CRAB
-	MobCrab.super.ctro(self, args)
+	MobCrab.super.ctor(self, args)
 end
 
 return MobCrab
