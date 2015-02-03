@@ -15,6 +15,7 @@ Entity.TYPE_NONE = 0
 Entity.TYPE_WARRIOR = 1
 
 -- Mobs
+Entity.TYPE_MOBS_BEGIN = 100
 Entity.TYPE_RAT = 101
 Entity.TYPE_SKELETON = 102
 Entity.TYPE_GOBLIN = 103
@@ -28,8 +29,10 @@ Entity.TYPE_SNAKE = 110
 Entity.TYPE_SKELETON2 = 111
 Entity.TYPE_BOSS = 112
 Entity.TYPE_DEATHKNIGHT = 113
+Entity.TYPE_MOBS_END = 114
 
 -- armors
+Entity.TYPE_ARMORS_BEGIN = 200
 Entity.TYPE_FIREFOX = 201
 Entity.TYPE_CLOTHARMOR = 202
 Entity.TYPE_LEATHERARMOR = 203
@@ -37,15 +40,19 @@ Entity.TYPE_MAILARMOR = 204
 Entity.TYPE_PLATEARMOR = 205
 Entity.TYPE_REDARMOR = 206
 Entity.TYPE_GOLDENARMOR = 207
+Entity.TYPE_ARMORS_END = 208
 
 -- objects
+Entity.TYPE_OBJECTS_BEGIN = 300
 Entity.TYPE_FLASK = 301
 Entity.TYPE_BURGER = 302
 Entity.TYPE_CHEST = 303
 Entity.TYPE_FIREPOTION = 304
 Entity.TYPE_CAKE = 305
+Entity.TYPE_OBJECTS_END = 306
 
 -- NPCs
+Entity.TYPE_NPCS_BEGIN = 400
 Entity.TYPE_GUARD = 401
 Entity.TYPE_KING = 402
 Entity.TYPE_OCTOCAT = 403
@@ -62,8 +69,10 @@ Entity.TYPE_FORESTNPC = 413
 Entity.TYPE_DESERTNPC = 414
 Entity.TYPE_LAVANPC = 415
 Entity.TYPE_CODER = 416
+Entity.TYPE_NPCS_END = 417
 
 -- weapons
+Entity.TYPE_WEAPONS_BEGIN = 500
 Entity.TYPE_SWORD1 = 501
 Entity.TYPE_SWORD2 = 502
 Entity.TYPE_REDSWORD = 503
@@ -71,7 +80,7 @@ Entity.TYPE_GOLDENSWORD = 504
 Entity.TYPE_MORNINGSTAR = 505
 Entity.TYPE_AXE = 506
 Entity.TYPE_BLUESWORD = 507
-
+Entity.TYPE_WEAPONS_END = 508
 
 Entity.VIEW_TAG_SPRITE = 101
 
@@ -83,7 +92,7 @@ function Entity:ctor(args)
 	self.id = 0
 	self.idx_ = Entity.idx_
 	Entity.idx_ = Entity.idx_ + 1
-	self.type_ = 0
+	self.type_ = args.type
 
 	cc.bind(self, "event")
 	self:getView() -- create view
@@ -192,6 +201,10 @@ end
 
 function Entity:setType(entityType)
 	self.type_ = entityType
+end
+
+function Entity:getType()
+	return self.type_
 end
 
 function Entity:play(actionName, args)
@@ -305,6 +318,10 @@ function Entity:parseFrames_(imageName, imageJson, aniType)
 	end
 
 	return {frames = frames, flip = needFlip}
+end
+
+function Entity:getImageSize()
+	return cc.size(self.json_.width, self.json_.height)
 end
 
 

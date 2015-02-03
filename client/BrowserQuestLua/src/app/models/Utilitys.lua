@@ -17,6 +17,16 @@ function Utilitys.px2pos(posPx)
 	return cc.p(math.ceil(posPx.x/tileSize.width), mapSize.height + 1 - math.ceil(posPx.y/tileSize.height))
 end
 
+function Utilitys.mod(x, y)
+	local integral, fractional = math.modf(x/y)
+	local remainder = x - y * integral
+
+	if 0 == remainder then
+		remainder = y
+	end
+	return remainder
+end
+
 function Utilitys.getOrientation(base, other)
 	local orientation
 	if other.x > base.x then

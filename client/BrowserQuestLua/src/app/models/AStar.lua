@@ -81,6 +81,8 @@ function AStar.findPath(s, e, g, w, h)
 		end
 	end
 
+	-- dump(path, "astar find path:")
+
 	return path
 end
 

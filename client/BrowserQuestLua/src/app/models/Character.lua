@@ -9,6 +9,8 @@ Character.COOL_DOWN_TIME = 0.3
 
 Character.PATH_FINISH = "pathingFinish"
 
+Character.VIEW_TAG_TALK = 103
+
 function Character:ctor(args)
 	local sm = cc.load("statemachine")
 	args.states = {
@@ -23,6 +25,8 @@ function Character:ctor(args)
 	
 	self.orientation_ = Orientation.DOWN
 	self.path_ = {}
+	self.sentences_ = args.sentences or {"hi, welcome to browser quest! -- from Quick Team"}
+	self.showSentenceIdx_ = 1
 	Character.super.ctor(self, args)
 end
 
@@ -60,10 +64,36 @@ function Character:setWalkSpeed(speed)
 	self.walkSpeed_ = speed
 end
 
-function Character:walkPos(pos)
+function Character:walk(pos)
 	local path = Game:findPath(pos, self.curPos_)
 	self:walkPath(path)
+	self.fllowEntity_ = nil
 end
+
+function Character:fllow(entity)
+	self.fllowEntity_ = entity or self.fllowEntity_
+
+	if not self.fllowEntity_ then
+		return
+	end
+
+	if self:distanceWith(self.fllowEntity_) > 1 then
+		local pos = self.fllowEntity_:getMapPos()
+		local path = Game:findPath(pos, self.curPos_)
+		self:walkPath(path)
+	end
+end
+
+function Character:lookAt(entity)
+	if not self.isWalking_ then
+	end
+
+	local orientation = Utilitys.getOrientation(self.curPos_, entity:getMapPos())
+	self.orientation_ = orientation or self.orientation_
+end
+
+
+
 
 function Character:walkTo(pos)
 	if not pos then
@@ -88,6 +118,8 @@ function Character:walkPath(path)
 	if #path < 1 then
 		return
 	end
+
+	-- dump(path, "walk path:")
 
 	self.path_ = path
 
@@ -144,7 +176,11 @@ function Character:onWalkStepComplete_()
 			elseif 1 == dis then
 				self:doEvent("stop")
 				self:lookAt(self.fllowEntity_)
-				self:attack()
+				if self.attackEntity_ then
+					self:attack()
+				elseif self.talkEntity_ then
+					self.talkEntity_:talk()
+				end
 			end
 		else
 			self:walkTo(table.remove(self.path_, 1))
@@ -187,7 +223,6 @@ function Character:playAtk(orientation)
 	local args = {
 		isOnce = true,
 		onComplete = function()
-			print("attack finish")
 			self.isCoolDown = true
 			self:doEvent("stop")
 			local handler
@@ -209,27 +244,6 @@ function Character:playAtk(orientation)
 	end
 end
 
-function Character:fllow(entity)	
-	self.fllowEntity_ = entity or self.fllowEntity_
-
-	if not self.fllowEntity_ then
-		return
-	end
-
-	if self:distanceWith(self.fllowEntity_) > 1 then
-		local pos = self.fllowEntity_:getMapPos()
-		self:walkPos(pos)
-	end
-end
-
-function Character:lookAt(entity)
-	if not self.isWalking_ then
-	end
-
-	local orientation = Utilitys.getOrientation(self.curPos_, entity:getMapPos())
-	self.orientation_ = orientation or self.orientation_
-end
-
 function Character:distanceWith(entity)
 	local disX = math.abs(entity.curPos_.x - self.curPos_.x)
 	local disY = math.abs(entity.curPos_.y - self.curPos_.y)
@@ -241,7 +255,7 @@ function Character:attack(entity)
 	self:fllow(entity)
 	self.attackEntity_ = entity or self.attackEntity_
 
-	if not self.fllowEntity_ then
+	if not self.attackEntity_ then
 		return
 	end
 
@@ -252,6 +266,80 @@ function Character:attack(entity)
 			print("Character:attack in cool down time")
 		end
 	end
+end
+
+function Character:talk(entity)
+	self:fllow(entity)
+	self.talkEntity_ = entity or self.talkEntity_
+
+	if not self.talkEntity_ then
+		return
+	end
+	if 1 == self:distanceWith(self.talkEntity_) then
+		self.talkEntity_:talkSentence_()
+	end
+end
+
+function Character:talkSentence_()
+	self:showSentence_(self.sentences_[self.showSentenceIdx_])
+	self.showSentenceIdx_ = Utilitys.mod(self.showSentenceIdx_ + 1, #self.sentences_)
+
+	self:setDisappearTimer_()
+end
+
+function Character:showSentence_(sentence)
+	local ttfConfig = {
+		fontFilePath = "fonts/fzkt.ttf",
+		fontSize = 14
+		}
+	local label = cc.Label:createWithTTF(ttfConfig, sentence, cc.VERTICAL_TEXT_ALIGNMENT_CENTER)
+	-- label:setTextColor(cc.c4b(0, 0, 0, 255))
+	label:align(display.CENTER)
+	local bg = self:getBubble_()
+	bg:setOpacity(255)
+	bg:removeAllChildren()
+	bg:addChild(label)
+
+	local size = label:getContentSize()
+	size.width = size.width + 10
+	size.height = size.height + 10
+	bg:setContentSize(size)
+	label:setPosition(cc.p(size.width/2, size.height/2))
+end
+
+function Character:disappearSentence_()
+	local bubble = self:getBubble_()
+	bubble:fadeout({time = 0.5, removeSelf = true})
+end
+
+function Character:setDisappearTimer_()
+	if self.bubbleAction_ then
+		transition.removeAction(self.bubbleAction_)
+		self.bubbleAction_ = nil
+	end
+
+	local bubble = self:getBubble_()
+	local action = transition.fadeOut(bubble, {
+		delay = 3,
+		time = 0.5,
+		onComplete = function()
+			bubble:removeAllChildren()
+			self.bubbleAction_ = nil
+		end
+		})
+	self.bubbleAction_ = action
+end
+
+function Character:getBubble_()
+	local bg = self.view_:getChildByTag(Character.VIEW_TAG_TALK)
+	if not bg then
+		bg = ccui.Scale9Sprite:create("img/common/talkbg.png")
+		self.view_:addChild(bg)
+		bg:setTag(Character.VIEW_TAG_TALK)
+		bg:setPositionY(self.json_.height + 40)
+	end
+
+	return bg
 end
 
 

@@ -64,15 +64,25 @@ function GameScene:createMap()
 	-- create player
 	local player = Game:createPlayer({
 		image = "clotharmor.png",
-		weaponName = "sword1.png"})
+		weaponName = "sword1.png",
+		name = "H天之林H"})
 	local view = player:getView()
 	player:setMapPos(cc.p(6, 298))
 
-	local rat = require("app.models.MobRat").new({
-		image = "rat.png"
-		})
+	local rat = require("app.models.MobRat").new()
 	rat:setMapPos(cc.p(17, 288))
 	Game:addMob(rat)
+
+	local guard = require("app.models.NPCGuard").new()
+	guard:setMapPos(cc.p(16, 292))
+	Game:addNPC(guard)
+	guard:talkSentence_()
+
+	local entity = require("app.models.Entity").new({
+		image = "item-axe.png",
+		})
+	entity:setMapPos(cc.p(16, 293))
+	Game:addObject(entity)
 end
 
 
@@ -104,15 +114,17 @@ function GameScene:onTouchEnded(touch, event)
 	local entity = entitys[1]
 
 	if entity then
-		Game:getPlayer():attack(entity)
-	else
-		local path = Game:findPath(mapPos)
-		if path then
-			Game:getPlayer():walkPath(path)
-			-- local drawNode = Utilitys.genPathNode(path)
-			-- Game:getMap():removeChildByTag(111)
-			-- Game:getMap():addChild(drawNode, 100, 111)
+		local entityType = entity:getType()
+		if entity.TYPE_MOBS_BEGIN < entityType and entityType < entity.TYPE_MOBS_END then
+			Game:getPlayer():attack(entity)
+		elseif entity.TYPE_NPCS_BEGIN < entityType and entityType < entity.TYPE_NPCS_END then
+			Game:getPlayer():talk(entity)
 		end
+	else
+		Game:getPlayer():walk(mapPos)
+		-- local drawNode = Utilitys.genPathNode(path)
+		-- Game:getMap():removeChildByTag(111)
+		-- Game:getMap():addChild(drawNode, 100, 111)
 	end
 end
 

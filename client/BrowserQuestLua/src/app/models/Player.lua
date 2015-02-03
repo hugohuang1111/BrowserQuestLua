@@ -3,11 +3,15 @@ local Character = import(".Character")
 local Player = class("Player", Character)
 
 Player.VIEW_TAG_WEAPON = 102
+Player.VIEW_TAG_NAME = 104
 
 function Player:ctor(args)
 	self.weaponName_ = args.weaponName
+	self.name_ = args.name
 	
 	Player.super.ctor(self, args)
+
+	self:createNameLabel_()
 end
 
 function Player:getView()
@@ -73,8 +77,6 @@ function Player:play(actionName, args)
 			end
 		end
 	end
-
-	
 end
 
 function Player:loadJson_()
@@ -84,6 +86,26 @@ end
 
 function Player:getFrames_(aniType)
 	return self:parseFrames_(self.imageName_, self.json_, aniType), self:parseFrames_(self.weaponName_, self.jsonWeapon_, aniType)
+end
+
+function Player:createNameLabel_()
+	if not self.name_ or 0 == string.len(self.name_) then
+		return
+	end
+
+	local ttfConfig = {
+		fontFilePath = "fonts/fzkt.ttf",
+		fontSize = 14
+		}
+	local label = cc.Label:createWithTTF(ttfConfig, self.name_, cc.VERTICAL_TEXT_ALIGNMENT_CENTER)
+	if Game:isSelf(self) then
+		label:setTextColor(cc.c4b(255, 255, 0, 255))
+		label:enableOutline(cc.c4b(0, 0, 0, 255), 1)
+	end
+	label:align(display.CENTER)
+	label:setPosition(0, self.json_.height + 10)
+	self.view_:addChild(label)
+	label:setTag(Player.VIEW_TAG_NAME)
 end
 
 return Player

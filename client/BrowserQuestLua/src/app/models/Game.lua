@@ -65,9 +65,26 @@ function Game:getPlayer()
 	return self.user_
 end
 
+function Game:isSelf(entity)
+	if entity.id == 0 then
+		return true
+	end
+	return false
+end
+
 function Game:addMob(mob)
 	self.map_:addChild(mob:getView(), 200)
 	self:addEntity(mob)
+end
+
+function Game:addNPC(npc)
+	self.map_:addChild(npc:getView(), 200)
+	self:addEntity(npc)
+end
+
+function Game:addObject(entity)
+	self.map_:addChild(entity:getView(), 200)
+	self:addEntity(entity)
 end
 
 function Game:addEntity(entity)
