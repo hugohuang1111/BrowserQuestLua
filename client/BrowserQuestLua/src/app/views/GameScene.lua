@@ -1,5 +1,4 @@
 
-local Game = import("..models.Game").getInstance()
 local Camera = import("..models.Camera")
 local Entity = import("..models.Entity")
 local Orientation = import("..models.Orientation")
@@ -7,7 +6,6 @@ local Utilitys = import("..models.Utilitys")
 local GameScene = class("GameScene", cc.load("mvc").ViewBase)
 local Scheduler = cc.Director:getInstance():getScheduler()
 
-cc.exports.Game = Game
 
 function GameScene:onCreate()
 	-- self:createUI()
@@ -78,9 +76,7 @@ function GameScene:createMap()
 	Game:addNPC(guard)
 	guard:talkSentence_()
 
-	local entity = require("app.models.Entity").new({
-		image = "item-axe.png",
-		})
+	local entity = require("app.models.ItemAxe").new()
 	entity:setMapPos(cc.p(16, 293))
 	Game:addObject(entity)
 end
@@ -119,6 +115,10 @@ function GameScene:onTouchEnded(touch, event)
 			Game:getPlayer():attack(entity)
 		elseif entity.TYPE_NPCS_BEGIN < entityType and entityType < entity.TYPE_NPCS_END then
 			Game:getPlayer():talk(entity)
+		elseif (entity.TYPE_ARMORS_BEGIN < entityType and entityType < entity.TYPE_ARMORS_END)
+			or (entity.TYPE_WEAPONS_BEGIN < entityType and entityType < entity.TYPE_WEAPONS_END) then
+			Game:getPlayer():loot(entity)
+			-- Game:getPlayer():changeWeapon("axe.png")
 		end
 	else
 		Game:getPlayer():walk(mapPos)

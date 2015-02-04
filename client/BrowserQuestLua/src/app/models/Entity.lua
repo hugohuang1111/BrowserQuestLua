@@ -1,6 +1,7 @@
 
 require("cocos.cocos2d.json")
 local Entity = class("Entity")
+local Types = import(".Types")
 local Utilitys = import(".Utilitys")
 local Game = import(".Game").getInstance()
 
@@ -10,82 +11,13 @@ Entity.ANIMATION_IDLE_TIME = 0.2 	-- idle animation frame time
 Entity.ANIMATION_MOVE_TIME = 0.1 	-- move animation frame time
 Entity.ANIMATION_ATK_TIME  = 0.1 	-- attack animation frame time
 
-
-Entity.TYPE_NONE = 0
-Entity.TYPE_WARRIOR = 1
-
--- Mobs
-Entity.TYPE_MOBS_BEGIN = 100
-Entity.TYPE_RAT = 101
-Entity.TYPE_SKELETON = 102
-Entity.TYPE_GOBLIN = 103
-Entity.TYPE_OGRE = 104
-Entity.TYPE_SPECTRE = 105
-Entity.TYPE_CRAB = 106
-Entity.TYPE_BAT = 107
-Entity.TYPE_WIZARD = 108
-Entity.TYPE_EYE = 109
-Entity.TYPE_SNAKE = 110
-Entity.TYPE_SKELETON2 = 111
-Entity.TYPE_BOSS = 112
-Entity.TYPE_DEATHKNIGHT = 113
-Entity.TYPE_MOBS_END = 114
-
--- armors
-Entity.TYPE_ARMORS_BEGIN = 200
-Entity.TYPE_FIREFOX = 201
-Entity.TYPE_CLOTHARMOR = 202
-Entity.TYPE_LEATHERARMOR = 203
-Entity.TYPE_MAILARMOR = 204
-Entity.TYPE_PLATEARMOR = 205
-Entity.TYPE_REDARMOR = 206
-Entity.TYPE_GOLDENARMOR = 207
-Entity.TYPE_ARMORS_END = 208
-
--- objects
-Entity.TYPE_OBJECTS_BEGIN = 300
-Entity.TYPE_FLASK = 301
-Entity.TYPE_BURGER = 302
-Entity.TYPE_CHEST = 303
-Entity.TYPE_FIREPOTION = 304
-Entity.TYPE_CAKE = 305
-Entity.TYPE_OBJECTS_END = 306
-
--- NPCs
-Entity.TYPE_NPCS_BEGIN = 400
-Entity.TYPE_GUARD = 401
-Entity.TYPE_KING = 402
-Entity.TYPE_OCTOCAT = 403
-Entity.TYPE_VILLAGEGIRL = 404
-Entity.TYPE_VILLAGER = 405
-Entity.TYPE_PRIEST = 406
-Entity.TYPE_SCIENTIST = 407
-Entity.TYPE_AGENT = 408
-Entity.TYPE_RICK = 409
-Entity.TYPE_NYAN = 410
-Entity.TYPE_SORCERER = 411
-Entity.TYPE_BEACHNPC = 412
-Entity.TYPE_FORESTNPC = 413
-Entity.TYPE_DESERTNPC = 414
-Entity.TYPE_LAVANPC = 415
-Entity.TYPE_CODER = 416
-Entity.TYPE_NPCS_END = 417
-
--- weapons
-Entity.TYPE_WEAPONS_BEGIN = 500
-Entity.TYPE_SWORD1 = 501
-Entity.TYPE_SWORD2 = 502
-Entity.TYPE_REDSWORD = 503
-Entity.TYPE_GOLDENSWORD = 504
-Entity.TYPE_MORNINGSTAR = 505
-Entity.TYPE_AXE = 506
-Entity.TYPE_BLUESWORD = 507
-Entity.TYPE_WEAPONS_END = 508
-
 Entity.VIEW_TAG_SPRITE = 101
 
 Entity.ANCHOR = cc.p(0.5, 0.3)
 
+for k,v in pairs(Types) do
+	Entity[k] = v
+end
 
 function Entity:ctor(args)
 	self.imageName_ = args.image
@@ -195,6 +127,11 @@ function Entity:getView()
 			cc.rect(0, 0, self.json_.width * app:getScale(), self.json_.height * app:getScale()))
 	display.newSprite(frame):addTo(self.view_, 1, Entity.VIEW_TAG_SPRITE)
 		:align(self.ANCHOR)
+
+	self.view_:enableNodeEvents()
+	self.view_.onExit = function()
+		self:dispatchEvent({name = "exit"})
+	end
 
 	return self.view_
 end

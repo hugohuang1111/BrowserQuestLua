@@ -1,9 +1,12 @@
 
+local Utilitys = import(".Utilitys")
 local Character = import(".Character")
 local Player = class("Player", Character)
 
 Player.VIEW_TAG_WEAPON = 102
 Player.VIEW_TAG_NAME = 104
+
+Player.ANCHOR = cc.p(0.5, 0.3)
 
 function Player:ctor(args)
 	self.weaponName_ = args.weaponName
@@ -28,25 +31,81 @@ end
 function Player:changeCloth(name)
 	self.view_:removeChildByTag(Player.VIEW_TAG_SPRITE)
 
+	self.imageName_ = name or self.imageName_
+	self:loadJson_()
+
 	local texture = display.loadImage(app:getResPath(name))
 	local frame = display.newSpriteFrame(texture,
 			cc.rect(0, 0, self.json_.width * app:getScale(), self.json_.height * app:getScale()))
 	display.newSprite(frame):addTo(self.view_, 1, Player.VIEW_TAG_SPRITE)
-		:align(Character.ANCHOR)
+		:align(Player.ANCHOR) --(Character.ANCHOR)
 end
 
 function Player:changeWeapon(name)
 	self.view_:removeChildByTag(Player.VIEW_TAG_WEAPON)
+
+	self.weaponName_ = name or self.weaponName_
+	self:loadJson_()
 	
 	local texture = display.loadImage(app:getResPath(name))
 	local frame = display.newSpriteFrame(texture,
-			cc.rect(0, 0, self.json_.width * app:getScale(), self.json_.height * app:getScale()))
+			cc.rect(0, 0, self.jsonWeapon_.width * app:getScale(), self.jsonWeapon_.height * app:getScale()))
 	display.newSprite(frame):addTo(self.view_, 1, Player.VIEW_TAG_WEAPON)
-		:align(Character.ANCHOR)
-	self.weaponName_ = name
+		:align(Player.ANCHOR) --(Character.ANCHOR)
+end
+
+function Player:loot(item)
+	self:fllow(item)
+	self.lootEntity_ = item or self.lootEntity_
+
+	if not self.lootEntity_ then
+		return
+	end
+
+	if 1 == self:distanceWith(self.lootEntity_) then
+		self:lootItem(item)
+	end
+end
+
+function Player:lootItem(item)
+	if not item then
+		return
+	end
+
+	local armorRank = Utilitys.getRankByName(self.imageName_)
+	local weaponRank = Utilitys.getRankByName(self.weaponName_)
+	local itemRank = Utilitys.getRankByName(item:getImageName())
+	local msg
+
+	if itemRank > Character.TYPE_ARMORS_BEGIN and itemRank < Character.TYPE_ARMORS_END then
+		-- armor
+		if itemRank > armorRank then
+			self:changeCloth(item:getImageName())
+			self:play("idle")
+			msg = item:getLootMsg()
+		elseif itemRank == armorRank then
+			msg = "You already have this armor"
+		else
+			msg = "You are wearing a better armor"
+		end
+	elseif itemRank > Character.TYPE_WEAPONS_BEGIN and itemRank < Character.TYPE_WEAPONS_END then
+		-- weapon
+		if itemRank > armorRank then
+			self:changeWeapon(item:getImageName())
+			self:play("idle")
+			msg = item:getLootMsg()
+		elseif itemRank == armorRank then
+			msg = "You already have this weapon"
+		else
+			msg = "You are wielding a better weapon"
+		end
+	end
+
+	Game:removeEntity(item)
 end
 
 function Player:play(actionName, args)
+	actionName = self:getStateByOrientation(actionName)
 	local result, resultWeapon = self:getFrames_(actionName)
 	local frames = result.frames
 	local weaponFrames = resultWeapon.frames

@@ -17,7 +17,98 @@ end
 function Game:ctor()
 	self.pathGrid_ = {}
 	self.entitys_ = {}
+
+	self:createNet()
+	self:connect()
 end
+
+--[[ DATA STORG PART BEGIN ]]
+
+function Game:loadData()
+	local path = device.writablePath .. "browserquest.dat"
+	local file = io.open(path)
+	if not file then
+		printInfo("game load data file not exist")
+		return
+	end
+
+	local content = file:read("*a")	
+	if content and string.len(content) > 0 then
+		self.gameState = json.decode(content)
+	end
+	io.close(file)
+end
+
+function Game:saveData()
+	local path = device.writablePath .. "browserquest.dat"
+	local content = json.encode(self.gameState)
+
+    local file = io.open(path, "w")
+    if not file then
+    	return
+    end
+    if not file:write(content) then
+    	printError("Game:saveData write file fail")
+    end
+    io.close(file)
+    file = nil
+end
+
+function Game:getPlayerData()
+	if not self.gameState then
+		return
+	end
+
+	return self.gameState.playerInfo
+end
+
+function Game:setPlayerData(playerData)
+	self.gameState = self.gameState or {}
+	self.gameState.playerInfo = playerData
+end
+
+--[[ DATA STORG PART END ]]
+
+
+--[[ DATA NETWORK PART BEGIN ]]
+
+function Game:createNet()
+	self.net_ = require("app.network.Net").getInstance()
+end
+
+function Game:connect()
+	self.net_:connect("ws://echo.websocket.org")
+
+	self.net_:onOpen(handler(self, self.wsOpen))
+	self.net_:onMessage(handler(self, self.wsMessage))
+	self.net_:onClose(handler(self, self.wsClose))
+	self.net_:onError(handler(self, self.wsError))
+end
+
+function Game:wsOpen()
+	printInfo("Game wsOpen")
+end
+
+function Game:wsMessage(data)
+	local jsonData = json.decode(data)
+	printInfo("Game wsMessage")
+	dump(jsonData, "message:")
+end
+
+function Game:wsClose()
+	printInfo("Game wsClose")
+end
+
+function Game:wsError(data)
+	printInfo("Game wsError")
+end
+
+function Game:send(data)
+	self.net_:send(json.encode(data))
+end
+
+--[[ DATA NETWORK PART END ]]
+
 
 function Game:setMap(map)
 	self.map_ = map
@@ -92,6 +183,7 @@ function Game:addEntity(entity)
 end
 
 function Game:removeEntity(entity)
+	entity:getView():removeFromParent()
 	self.entitys_[entity:getIdx()] = nil
 end
 

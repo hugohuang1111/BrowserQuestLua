@@ -1,5 +1,6 @@
 
 local Orientation = import(".Orientation")
+local Types = import(".Types")
 local Utilitys = {}
 
 
@@ -25,6 +26,12 @@ function Utilitys.mod(x, y)
 		remainder = y
 	end
 	return remainder
+end
+
+function Utilitys.getRankByName(name)
+	local Key = "TYPE_" .. string.upper(string.sub(name, 1, -5))
+
+	return Types[Key]
 end
 
 function Utilitys.getOrientation(base, other)

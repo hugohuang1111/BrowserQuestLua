@@ -82,6 +82,12 @@ function Character:fllow(entity)
 		local path = Game:findPath(pos, self.curPos_)
 		self:walkPath(path)
 	end
+
+	self.fllowEntity_:on("exit",
+		function()
+			printInfo("Character exit")
+			self.fllowEntity_ = nil
+		end)
 end
 
 function Character:lookAt(entity)
@@ -90,6 +96,24 @@ function Character:lookAt(entity)
 
 	local orientation = Utilitys.getOrientation(self.curPos_, entity:getMapPos())
 	self.orientation_ = orientation or self.orientation_
+end
+
+function Character:getStateByOrientation(state)
+	local pos = string.find(state, "_")
+	local newState = state
+	if not pos then
+		if Orientation.DOWN == self.orientation_ then
+			newState = newState .. "_down"
+		elseif Orientation.UP == self.orientation_ then
+			newState = newState .. "_up"
+		elseif Orientation.LEFT == self.orientation_ then
+			newState = newState .. "_left"
+		elseif Orientation.RIGHT == self.orientation_ then
+			newState = newState .. "_right"
+		end
+	end
+
+	return newState
 end
 
 
@@ -180,6 +204,9 @@ function Character:onWalkStepComplete_()
 					self:attack()
 				elseif self.talkEntity_ then
 					self.talkEntity_:talk()
+				elseif self.lootEntity_ then
+					printInfo("onWalkStepComplete_ lootEntity_")
+					self:lootItem(self.lootEntity_)
 				end
 			end
 		else

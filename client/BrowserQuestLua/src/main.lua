@@ -13,6 +13,12 @@ require "cocos.cocos2d.OpenglConstants"
 require "cocos.ui.GuiConstants"
 require "cocos.ui.experimentalUIConstants"
 
+-- json
+require "cocos.cocos2d.json"
+
+-- websocket
+require "cocos.network.NetworkConstants"
+
 local function main()
     require("app.MyApp"):create():run("LoginScene")
 end

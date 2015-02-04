@@ -1,5 +1,7 @@
 
 local MyApp = class("MyApp", cc.load("mvc").AppBase)
+local Game = require("app.models.Game").getInstance()
+cc.exports.Game = Game
 
 function MyApp:onCreate()
 	self.resScale_ = 2

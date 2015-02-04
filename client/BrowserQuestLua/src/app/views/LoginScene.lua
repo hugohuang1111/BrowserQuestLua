@@ -2,6 +2,9 @@
 local LoginScene = class("LoginScene", cc.load("mvc").ViewBase)
 
 function LoginScene:onCreate()
+
+    Game:loadData()
+
     -- add background image
     local bgPath = app:getResPath("wood.png")
     local bg = cc.Sprite:create(bgPath, cc.size(display.width, display.height))
@@ -47,12 +50,25 @@ function LoginScene:onCreate()
         :align(display.CENTER, nameBgSize.width/2, nameBgSize.height/2)
         :addTo(nameBg)
 
+    local playerInfo = Game:getPlayerData()
+    if playerInfo then
+        textfield:setString(playerInfo.name or "")
+    end
+
     ccui.Button:create("button.png", "button.png", "button-disable.png", ccui.TextureResType.plistType)
         :align(display.CENTER, parchmentSize.width/2, parchmentSize.height - 135)
         :addTo(parchment)
         :onTouch(function(event)
             if "ended" == event.name then
-                app:enterScene("GameScene")
+                local name = textfield:getString()
+                if name and string.len(name) > 0 then
+                    Game:setPlayerData({name = name})
+                    Game:saveData()
+                    app:enterScene("GameScene")
+                    Game:send(Game:getPlayerData())
+                else
+                    self:shake(nameBg)
+                end
             end
         end)
 
@@ -61,8 +77,17 @@ function LoginScene:onCreate()
     --                          "fonts/graphicpixel-webfont.ttf", 24);
     -- nameEditBox:align(display.CENTER, nameBgSize.width/2, nameBgSize.height/2):addTo(nameBg)
 
+end
 
-
+function LoginScene:shake(target)
+    local time = 0.1
+    local actions = {}
+    actions[#actions + 1] = cc.MoveBy:create(time/2, cc.p(-5, 0))
+    actions[#actions + 1] = cc.MoveBy:create(time, cc.p(10, 0))
+    actions[#actions + 1] = cc.MoveBy:create(time, cc.p(-10, 0))
+    actions[#actions + 1] = cc.MoveBy:create(time, cc.p(5, 0))
+    local seq = transition.sequence(actions)
+    target:runAction(seq)
 end
 
 return LoginScene
