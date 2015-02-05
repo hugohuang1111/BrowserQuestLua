@@ -65,7 +65,7 @@ function LoginScene:onCreate()
                     Game:setPlayerData({name = name})
                     Game:saveData()
                     app:enterScene("GameScene")
-                    Game:send(Game:getPlayerData())
+                    Game:sendCmd("Login", Game:getPlayerData())
                 else
                     self:shake(nameBg)
                 end

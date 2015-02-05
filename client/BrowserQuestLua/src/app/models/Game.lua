@@ -19,7 +19,7 @@ function Game:ctor()
 	self.entitys_ = {}
 
 	self:createNet()
-	self:connect()
+	-- self:connect()
 end
 
 --[[ DATA STORG PART BEGIN ]]
@@ -74,37 +74,27 @@ end
 
 function Game:createNet()
 	self.net_ = require("app.network.Net").getInstance()
+	self.net_:setAddr("10.211.55.3:8088")
+	self.net_:on(handler(self, self.netCallback))
+
+	self.net_:launch()
 end
 
-function Game:connect()
-	self.net_:connect("ws://echo.websocket.org")
-
-	self.net_:onOpen(handler(self, self.wsOpen))
-	self.net_:onMessage(handler(self, self.wsMessage))
-	self.net_:onClose(handler(self, self.wsClose))
-	self.net_:onError(handler(self, self.wsError))
+function Game:netCallback(event)
+	if 0 ~= event.err then
+		printError("Game:netCallback netError:%d", event.err)
+		return
+	end
 end
 
-function Game:wsOpen()
-	printInfo("Game wsOpen")
-end
+function Game:sendCmd(action, data)
+	data.action = action
 
-function Game:wsMessage(data)
-	local jsonData = json.decode(data)
-	printInfo("Game wsMessage")
-	dump(jsonData, "message:")
-end
-
-function Game:wsClose()
-	printInfo("Game wsClose")
-end
-
-function Game:wsError(data)
-	printInfo("Game wsError")
+	self:send(data)
 end
 
 function Game:send(data)
-	self.net_:send(json.encode(data))
+	self.net_:sendCmd(json.encode(data))
 end
 
 --[[ DATA NETWORK PART END ]]

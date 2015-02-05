@@ -6,6 +6,10 @@ local gInstance = nil
 Net.new_ = Net.new
 Net.new = nil
 
+Net.CMD_CONNECT 		= 1
+Net.CMD_DISCONNECT 		= 2
+Net.CMD_SEND			= 3
+
 
 function Net.getInstance()
 	if not gInstance then
@@ -17,10 +21,13 @@ end
 
 function Net:ctor()
 	self.ws_ = nil
+
+	self.sendCmds_ = {}
 end
 
-function Net:connect(addr)
-	local ws = cc.WebSocket:create(addr)
+function Net:connect(addr, protocol)
+	local addr = "ws://" .. self.addr_ .. "/socket"
+	local ws = cc.WebSocket:createByAProtocol(addr, self.protocol_)
 
 	ws:registerScriptHandler(handler(self, self.wsOpen), cc.WEBSOCKET_OPEN)
     ws:registerScriptHandler(handler(self, self.wsMessage), cc.WEBSOCKET_MESSAGE)
@@ -30,24 +37,39 @@ function Net:connect(addr)
     self.ws_ = ws
 end
 
+function Net:disconnect()
+	if self.ws_ then
+		self.ws_:close()
+	end
+end
+
 function Net:wsOpen()
 	printInfo("Net ws open")
-	self.openCB_()
+	if self.openCB_ then
+		self.openCB_()
+	end
 end
 
 function Net:wsMessage(data)
 	printInfo("Net ws message")
-	self.messageCB_(data)
+	if self.messageCB_ then
+		self.messageCB_(data)
+	end
 end
 
 function Net:wsClose()
+	self.ws_ = nil
 	printInfo("Net ws close")
-	self.closeCB_()
+	if self.closeCB_ then
+		self.closeCB_()
+	end
 end
 
 function Net:wsError(data)
 	printInfo("Net ws error")
-	self.errorCB_(data)
+	if self.errorCB_ then
+		self.errorCB_(data)
+	end
 end
 
 function Net:onOpen(callback)
@@ -66,9 +88,96 @@ function Net:onError(callback)
 	self.errorCB_ = callback
 end
 
-function Net:send(str)
-	local ws = self.ws_
-	ws:sendString(str)
+function Net:on(callback)
+	self.callback_ = callback
 end
+
+function Net:setAddr(addr)
+	self.addr_ = addr
+end
+
+function Net:sendCmd(args)
+	local d = {cmd = Net.CMD_SEND, data = args}
+	table.insert(self.sendCmds_, d)
+
+	self:operCmd_()
+end
+
+function Net:send(cmd, args)
+	local d = {cmd = cmd, data = args}
+	table.insert(self.sendCmds_, d)
+
+	self:operCmd_()
+end
+
+function Net:operCmd_()
+	if not cmd then
+		return
+	end
+
+	for i,cmd in ipairs(self.sendCmds_) do
+		if Net.CMD_CONNECT == cmd.cmd then
+			if not self.ws_ or cc.WEBSOCKET_STATE_CLOSED == self.ws_:getReadyState() then
+				if self.protocol_ then
+					self:connect(self.addr_, self.protocol_)
+				else
+					self:launch()
+				end
+				return
+			end
+		elseif Net.CMD_DISCONNECT == cmd.cmd then
+			if self.ws_
+				and (cc.WEBSOCKET_STATE_CONNECTING == self.ws_:getReadyState()
+					or cc.WEBSOCKET_STATE_OPEN == self.ws_:getReadyState()) then
+				self:disconnect()
+			end
+		elseif Net.CMD_SEND == cmd.cmd then
+			if not self.ws_ then
+				if self.protocol_ then
+					self:connect(self.addr_, self.protocol_)
+				else
+					self:launch()
+				end
+				return
+			elseif cc.WEBSOCKET_STATE_OPEN == self.ws_:getReadyState() then
+				self.ws_:sendString(cmd.data)
+			end
+		end
+	end
+end
+
+function Net:launch()
+	local addr = "http://" .. self.addr_ .. "/api?action=launcher.getsessionid"
+
+	local xhr = cc.XMLHttpRequest:new()
+    xhr.responseType = cc.XMLHTTPREQUEST_RESPONSE_STRING
+    xhr:open("POST", addr)
+
+    local function onReadyStateChange()
+    	local isSuccess = false
+        if xhr.readyState == 4 and (xhr.status >= 200 and xhr.status < 207) then
+        	local resp = json.decode(xhr.response)
+        	if resp or resp.sid then
+        		self.sessionId_ = resp.sid
+        		self.protocol_ = "quickserver-" .. self.sessionId_
+            	self:connect(self.addr_, self.protocol_)
+            	isSuccess = true
+            else
+        		printError("Net:Luanch fail, session id nil")
+        	end
+        else
+            printError("Net:Luanch fail, http state:%d, status:%d", xhr.readyState, xhr.status)
+        end
+        if not isSuccess then
+        	self.callback_({err = 1, description = "get session fail"})
+        end
+    end
+
+    xhr:registerScriptHandler(onReadyStateChange)
+    xhr:send("appName=BrowerQuestLua")
+    self.isLaunching_ = true
+
+end
+
 
 return Net
