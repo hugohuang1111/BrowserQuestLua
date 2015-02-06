@@ -2,6 +2,8 @@
 local NetMsgConstants = import(".NetMsgConstants")
 local NetMsg = class("NetMsg")
 
+local gNetMsgCounter = 1
+
 --[[
 
 {
@@ -32,13 +34,27 @@ function NetMsg.err(err)
 	return msg
 end
 
+function NetMsg.gen(body)
+	local msg = NetMsg.new()
+	msg:setBody(body)
+
+	return msg
+end
+
 function NetMsg:ctor(data)
 	if data then
-		self.data_ = json.decode(data)
-	else
+		if "string" == type(data) then
+			self.data_ = json.decode(data)
+		elseif "table" == type(data) then
+			self.data_ = data
+		end
+	end
+	if not self.data_ then
 		self.data_ = {}
 		self.data_.err = NetMsgConstants.ERROR_SUCCESS
 		self.data_.desc = "success"
+		self.data_.__id = gNetMsgCounter
+		gNetMsgCounter = gNetMsgCounter + 1
 	end
 end
 
@@ -53,8 +69,8 @@ function NetMsg:getDesc()
 	return self.data_.desc
 end
 
-function NetMsg:getBody()
-	return self.data_.body
+function NetMsg:getError()
+	return self.data_.err
 end
 
 function NetMsg:setError(err)
@@ -81,8 +97,20 @@ function NetMsg:setDesc(str)
 	end
 end
 
+function NetMsg:setAction(action)
+	self.data_.action = action
+end
+
+function NetMsg:getAction()
+	return self.data_.action
+end
+
 function NetMsg:setBody(body)
 	self.data_.body = body
+end
+
+function NetMsg:getBody()
+	return self.data_.body
 end
 
 function NetMsg:getString()

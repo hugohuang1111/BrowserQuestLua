@@ -1,6 +1,7 @@
+#!/bin/bash
 
 # copy to client
-cp *.lua ../client/BrowserQuestLua/src/app/network/*.lua
+cp *.lua ../client/BrowserQuestLua/src/app/network/
 
 # copy to server
-cp *.lua ../server/network/*.lua
+cp *.lua ../server/network/

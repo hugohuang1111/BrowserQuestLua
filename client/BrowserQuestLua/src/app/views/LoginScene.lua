@@ -52,7 +52,7 @@ function LoginScene:onCreate()
 
     local playerInfo = Game:getPlayerData()
     if playerInfo then
-        textfield:setString(playerInfo.name or "")
+        textfield:setString(playerInfo.nickName or "")
     end
 
     ccui.Button:create("button.png", "button.png", "button-disable.png", ccui.TextureResType.plistType)
@@ -62,9 +62,10 @@ function LoginScene:onCreate()
             if "ended" == event.name then
                 local name = textfield:getString()
                 if name and string.len(name) > 0 then
-                    Game:setPlayerData({name = name})
+                    local playerInfo = Game:getPlayerData()
+                    playerInfo.nickName = name
+                    Game:setPlayerData(playerInfo)
                     Game:saveData()
-                    -- app:enterScene("GameScene")
                     Game:sendCmd("user.welcome", Game:getPlayerData())
                 else
                     self:shake(nameBg)

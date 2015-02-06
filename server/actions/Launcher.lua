@@ -2,7 +2,6 @@
 local Launcher = class("Launcher")
 
 function Launcher:ctor(connect)
-	printWarn("Launcher ctor entery")
 	self.connect_ = connect
 end
 

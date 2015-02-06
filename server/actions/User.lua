@@ -1,6 +1,6 @@
 
-local NetMsgConstants = import("...share.NetMsgConstants")
-local NetMsg = import("...share.NetMsg")
+local NetMsgConstants = import("..network.NetMsgConstants")
+local NetMsg = import("..network.NetMsg")
 
 local User = class("User")
 
@@ -9,8 +9,8 @@ function User:ctor(connect)
 end
 
 function User:welcome(args)
-	local msg = NetMsg.new()
-	local playerInfo = args
+	local msg = NetMsg.parser(args)
+	local playerInfo = msg:getBody()
 
 	if not playerInfo.nickName or 0 == string.len(playerInfo.nickName) then
 		msg:setError(NetMsgConstants.ERROR_NICKNAME_NULL)
@@ -22,6 +22,9 @@ function User:welcome(args)
 	if string.len(playerInfo.nickName) > 10 then
 		playerInfo.nickName = string.sub(playerInfo.nickName, 1, 10)
 	end
+
+	-- born position
+	playerInfo.pos = cc.p(35, 230)
 
 	msg:setBody(playerInfo)
 	return msg:getData()

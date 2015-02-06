@@ -33,8 +33,6 @@ function Camera:ctor(map)
 	local tileSize = Game:getTileSize()
 	local scale = map:getScale()
 
-	print("scale:" .. scale)
-
 	--YVals_ 以左下为起点
 	self.YVals_ = {}
 	self.YVals_[1] = 0
@@ -91,6 +89,15 @@ function Camera:move(disX, disY)
 	end
 
 	self.map_:setPosition(posX + disX, posY + disY)
+end
+
+function Camera:look(entity)
+	local p = entity:getMapPos()
+	local mapSize = Game:getMapSize()
+	local tileSize = Game:getTileSize()
+
+	local pos = cc.p(p.x * tileSize.width + tileSize.width/2, (mapSize.height - p.y) * tileSize.height - tileSize.height/2)
+	self:move(display.cx - pos.x, display.cy - pos.y)
 end
 
 return Camera

@@ -1,6 +1,6 @@
 
-local NetMsgConstants = import("......share.NetMsgConstants")
-local NetMsg = import("......share.NetMsg")
+local NetMsgConstants = import("..network.NetMsgConstants")
+local NetMsg = import("..network.NetMsg")
 
 local Game = class("Game")
 local AStar = import(".AStar")
@@ -86,25 +86,26 @@ end
 function Game:netCallback(data)
 	local msg = NetMsg.parser(data)
 	if not msg:isOK() then
-		printError("Game:netCallback netError:%d", event.err)
+		printError("Game:netCallback netError:%d", msg:getError())
 		return
 	end
 
 	local body = msg:getBody()
-	local action = body.action
+	local action = msg:getAction()
 	if "user.welcome" == action then
 		self.gameState.playerInfo = body
+		app:enterScene("GameScene")
 	elseif "user.bye" == action then
 	end
-
-	dump(self.gameState, "gameState:")
-
 end
 
 function Game:sendCmd(action, data)
-	data.action = action
+	local msg = NetMsg.new()
 
-	self:send(data)
+	msg:setBody(data)
+	msg:setAction(action)
+
+	self:send(msg:getData())
 end
 
 function Game:send(data)
@@ -146,8 +147,15 @@ function Game:getMapSizePx()
 	return cc.size(self.mapSize_.width * self.tileSize_.width, self.mapSize_.height * self.tileSize_.height)
 end
 
-function Game:createPlayer(args)
-	local player = require("app.models.Player").new(args)
+function Game:createPlayer()
+	local playerInfo = self:getPlayerData()
+	local player = require("app.models.Player").new({
+		image = playerInfo.imageName,
+		weaponName = playerInfo.weaponName,
+		name = playerInfo.nickName
+		})
+	player:setMapPos(playerInfo.pos)
+
 	self.user_ = player
 
 	self.map_:addChild(player:getView(), 201)
@@ -159,6 +167,8 @@ end
 function Game:getPlayer()
 	return self.user_
 end
+
+
 
 function Game:isSelf(entity)
 	if entity.id == 0 then

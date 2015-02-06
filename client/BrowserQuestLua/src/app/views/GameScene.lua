@@ -57,28 +57,22 @@ function GameScene:createMap()
 	self.map_ = map
 
 	self.camera_ = Camera.new(map)
-	-- self.camera_:move(-12*14, (250 - 314)*14)
-
 	-- create player
-	local player = Game:createPlayer({
-		image = "clotharmor.png",
-		weaponName = "sword1.png",
-		name = "H天之林H"})
-	local view = player:getView()
-	player:setMapPos(cc.p(6, 298))
+	local player = Game:createPlayer()
+	self.camera_:look(player)
 
-	local rat = require("app.models.MobRat").new()
-	rat:setMapPos(cc.p(17, 288))
-	Game:addMob(rat)
+	-- local rat = require("app.models.MobRat").new()
+	-- rat:setMapPos(cc.p(17, 288))
+	-- Game:addMob(rat)
 
-	local guard = require("app.models.NPCGuard").new()
-	guard:setMapPos(cc.p(16, 292))
-	Game:addNPC(guard)
-	guard:talkSentence_()
+	-- local guard = require("app.models.NPCGuard").new()
+	-- guard:setMapPos(cc.p(16, 292))
+	-- Game:addNPC(guard)
+	-- guard:talkSentence_()
 
-	local entity = require("app.models.ItemAxe").new()
-	entity:setMapPos(cc.p(16, 293))
-	Game:addObject(entity)
+	-- local entity = require("app.models.ItemAxe").new()
+	-- entity:setMapPos(cc.p(16, 293))
+	-- Game:addObject(entity)
 end
 
 
