@@ -65,3 +65,7 @@ xcschememanagement.plist
 ._.*
 xcuserdata/
 DerivedData/
+
+# Ignor api file
+*.apk
+

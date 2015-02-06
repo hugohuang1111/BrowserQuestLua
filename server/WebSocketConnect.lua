@@ -13,7 +13,9 @@ function WebSocketConnect:afterConnectReady()
 	printInfo("WebSocketConnect afterConnectReady")
     -- init
     local uid = self:getSession():get("uid")
-    self:setConnectTag(uid)
+    if uid then
+    	self:setConnectTag(uid)
+    end
     -- self.battle = BattleService:create(self, uid)
 end
 

@@ -295,6 +295,7 @@ function import(moduleName, currentModuleName)
         if not currentModuleNameParts then
             if not currentModuleName then
                 local n,v = debug.getlocal(3, 1)
+                printInfo("currentModuleName:" .. v)
                 currentModuleName = v
             end
 

@@ -45,6 +45,7 @@ end
 
 function Net:wsOpen()
 	printInfo("Net ws open")
+	self:operCmd_()
 	if self.openCB_ then
 		self.openCB_()
 	end
@@ -54,6 +55,9 @@ function Net:wsMessage(data)
 	printInfo("Net ws message")
 	if self.messageCB_ then
 		self.messageCB_(data)
+	end
+	if self.callback_ then
+		self.callback_(data)
 	end
 end
 
@@ -96,14 +100,11 @@ function Net:setAddr(addr)
 	self.addr_ = addr
 end
 
-function Net:sendCmd(args)
-	local d = {cmd = Net.CMD_SEND, data = args}
-	table.insert(self.sendCmds_, d)
-
-	self:operCmd_()
+function Net:send(args)
+	self:sendCmd(Net.CMD_SEND, args)
 end
 
-function Net:send(cmd, args)
+function Net:sendCmd(cmd, args)
 	local d = {cmd = cmd, data = args}
 	table.insert(self.sendCmds_, d)
 
@@ -111,11 +112,11 @@ function Net:send(cmd, args)
 end
 
 function Net:operCmd_()
-	if not cmd then
-		return
-	end
-
 	for i,cmd in ipairs(self.sendCmds_) do
+		if not cmd then
+			return
+		end
+
 		if Net.CMD_CONNECT == cmd.cmd then
 			if not self.ws_ or cc.WEBSOCKET_STATE_CLOSED == self.ws_:getReadyState() then
 				if self.protocol_ then
@@ -140,10 +141,15 @@ function Net:operCmd_()
 				end
 				return
 			elseif cc.WEBSOCKET_STATE_OPEN == self.ws_:getReadyState() then
-				self.ws_:sendString(cmd.data)
+				self:sendReal_(cmd.data)
 			end
 		end
 	end
+end
+
+function Net:sendReal_(data)
+	printInfo("Net send real data:%s", data)
+	self.ws_:sendString(data)
 end
 
 function Net:launch()

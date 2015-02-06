@@ -1,4 +1,7 @@
 
+local NetMsgConstants = import("......share.NetMsgConstants")
+local NetMsg = import("......share.NetMsg")
+
 local Game = class("Game")
 local AStar = import(".AStar")
 local gInstance = nil
@@ -80,11 +83,22 @@ function Game:createNet()
 	self.net_:launch()
 end
 
-function Game:netCallback(event)
-	if 0 ~= event.err then
+function Game:netCallback(data)
+	local msg = NetMsg.parser(data)
+	if not msg:isOK() then
 		printError("Game:netCallback netError:%d", event.err)
 		return
 	end
+
+	local body = msg:getBody()
+	local action = body.action
+	if "user.welcome" == action then
+		self.gameState.playerInfo = body
+	elseif "user.bye" == action then
+	end
+
+	dump(self.gameState, "gameState:")
+
 end
 
 function Game:sendCmd(action, data)
@@ -94,7 +108,7 @@ function Game:sendCmd(action, data)
 end
 
 function Game:send(data)
-	self.net_:sendCmd(json.encode(data))
+	self.net_:send(json.encode(data))
 end
 
 --[[ DATA NETWORK PART END ]]

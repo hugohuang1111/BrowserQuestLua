@@ -7,7 +7,6 @@ function Launcher:ctor(connect)
 end
 
 function Launcher:getsessionid(args)
-	printInfo("Launcher htl:%s", json.encode(args))
 	if not args.appName or "BrowerQuestLua" ~= args.appName then
 		throw("invalid launcher command")
 	end

@@ -64,8 +64,8 @@ function LoginScene:onCreate()
                 if name and string.len(name) > 0 then
                     Game:setPlayerData({name = name})
                     Game:saveData()
-                    app:enterScene("GameScene")
-                    Game:sendCmd("Login", Game:getPlayerData())
+                    -- app:enterScene("GameScene")
+                    Game:sendCmd("user.welcome", Game:getPlayerData())
                 else
                     self:shake(nameBg)
                 end
