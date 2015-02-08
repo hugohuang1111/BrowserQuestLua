@@ -13,7 +13,7 @@ Entity.ANIMATION_ATK_TIME  = 0.1 	-- attack animation frame time
 
 Entity.VIEW_TAG_SPRITE = 101
 
-Entity.ANCHOR = cc.p(0.5, 0.3)
+Entity.ANCHOR = cc.p(0.5, 0.5)
 
 for k,v in pairs(Types) do
 	Entity[k] = v
@@ -34,6 +34,14 @@ end
 
 function Entity:getIdx()
 	return self.idx_
+end
+
+function Entity:setId(id)
+	self.id = id
+end
+
+function Entity:getId()
+	return self.id
 end
 
 function Entity:bindStateMachine_(states)

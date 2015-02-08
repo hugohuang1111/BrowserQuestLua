@@ -1,5 +1,6 @@
 
 local Camera = import("..models.Camera")
+local Types = import("..models.Types")
 local Entity = import("..models.Entity")
 local Orientation = import("..models.Orientation")
 local Utilitys = import("..models.Utilitys")
@@ -61,6 +62,8 @@ function GameScene:createMap()
 	local player = Game:createPlayer()
 	self.camera_:look(player)
 
+	self:createEntitys()
+
 	-- local rat = require("app.models.MobRat").new()
 	-- rat:setMapPos(cc.p(17, 288))
 	-- Game:addMob(rat)
@@ -73,6 +76,39 @@ function GameScene:createMap()
 	-- local entity = require("app.models.ItemAxe").new()
 	-- entity:setMapPos(cc.p(16, 293))
 	-- Game:addObject(entity)
+end
+
+function GameScene:createEntitys()
+	local gameInfo = Game:getGameInfo()
+	local entitys = gameInfo.entitysStatic
+
+	for i,entityInfo in ipairs(entitys) do
+		self:createEntity(entityInfo)
+	end
+end
+
+function GameScene:createEntity(entityInfo)
+	local cls
+	local key = Utilitys.getKeyByValue(Types, entityInfo.type)
+	if not key then
+		return
+	end
+	local name = string.ucfirst(string.lower(string.sub(key, 6)))
+	if entityInfo.type > Entity.TYPE_MOBS_BEGIN and entityInfo.type < Entity.TYPE_MOBS_END then
+		cls = require("app.models.Mob" .. name)
+	elseif entityInfo.type > Entity.TYPE_NPCS_BEGIN and entityInfo.type < Entity.TYPE_NPCS_END then
+		if string.len(name) > 3 and "NPC" == string.upper(string.sub(name, -3)) then
+			name = string.sub(name, 1, -4)
+		end
+		cls = require("app.models.NPC" .. name)
+	else
+		printInfo("GameScene:createEntity unsupport entity:" .. name)
+		return
+	end
+	local entity = cls.new()
+	entity:setMapPos(entityInfo.pos)
+	entity:setId(entityInfo.id)
+	Game:addObject(entity)
 end
 
 

@@ -6,11 +6,13 @@ local Player = class("Player", Character)
 Player.VIEW_TAG_WEAPON = 102
 Player.VIEW_TAG_NAME = 104
 
-Player.ANCHOR = cc.p(0.5, 0.3)
+Player.ANCHOR = cc.p(0.5, 0.5)
 
 function Player:ctor(args)
 	self.weaponName_ = args.weaponName
 	self.name_ = args.name
+
+	args.type = NPC.TYPE_WARRIOR
 	
 	Player.super.ctor(self, args)
 

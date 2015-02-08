@@ -20,6 +20,7 @@ end
 function Game:ctor()
 	self.pathGrid_ = {}
 	self.entitys_ = {}
+	self.gameInfo_ = {}
 
 	self:createNet()
 	-- self:connect()
@@ -77,7 +78,7 @@ end
 
 function Game:createNet()
 	self.net_ = require("app.network.Net").getInstance()
-	self.net_:setAddr("10.211.55.3:8088")
+	self.net_:setAddr(SERVER_ADDR)
 	self.net_:on(handler(self, self.netCallback))
 
 	self.net_:launch()
@@ -93,8 +94,10 @@ function Game:netCallback(data)
 	local body = msg:getBody()
 	local action = msg:getAction()
 	if "user.welcome" == action then
-		self.gameState.playerInfo = body
+		self.gameState.playerInfo = body.playerInfo
+		self.gameInfo_.entitysStatic = body.entitysStatic
 		app:enterScene("GameScene")
+		print("htl recb entity number:" .. #self.gameInfo_.entitysStatic)
 	elseif "user.bye" == action then
 	end
 end
@@ -114,6 +117,9 @@ end
 
 --[[ DATA NETWORK PART END ]]
 
+function Game:getGameInfo()
+	return self.gameInfo_
+end
 
 function Game:setMap(map)
 	self.map_ = map

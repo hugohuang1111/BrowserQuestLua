@@ -24,3 +24,6 @@ CC_DESIGN_RESOLUTION = {
         end
     end
 }
+
+-- SERVER_ADDR = "10.211.55.3:8088"
+SERVER_ADDR = "192.168.126.128:8088"

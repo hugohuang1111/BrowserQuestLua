@@ -5,7 +5,7 @@ local NPC = class("NPC", Character)
 NPC.ANIMATION_IDLE_TIME = 0.5 	-- idle animation frame time
 NPC.ANIMATION_MOVE_TIME = 0.8 	-- move animation frame time
 
-NPC.ANCHOR = cc.p(0.5, 0.4)
+NPC.ANCHOR = cc.p(0.5, 0.5)
 
 function NPC:ctor(args)
 	NPC.super.ctor(self, args)

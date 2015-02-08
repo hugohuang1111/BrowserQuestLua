@@ -269,6 +269,8 @@ function Character:playAtk(orientation)
 	elseif Orientation.RIGHT == orientation then
 		self:play("atk_right", args)
 	end
+
+	Game:sendCmd("play.atk", {sender = self.id, target = self.attackEntity_:getId()})
 end
 
 function Character:distanceWith(entity)

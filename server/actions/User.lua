@@ -17,16 +17,15 @@ function User:welcome(args)
 		return msg:getData()
 	end
 
-	playerInfo.imageName = playerInfo.imageName or "clotharmor.png"
-	playerInfo.weaponName = playerInfo.weaponName or "sword1.png"
-	if string.len(playerInfo.nickName) > 10 then
-		playerInfo.nickName = string.sub(playerInfo.nickName, 1, 10)
-	end
+	local player = World:getPlayerEntity(playerInfo.nickName, playerInfo.id)
 
-	-- born position
-	playerInfo.pos = cc.p(35, 230)
+	playerInfo = player:getPlayerInfo()
 
-	msg:setBody(playerInfo)
+	local body = {}
+	body.playerInfo = playerInfo
+	body.entitysStatic = World:getEntitysStaticInfo()
+
+	msg:setBody(body)
 	return msg:getData()
 end
 

@@ -34,6 +34,14 @@ function Utilitys.getRankByName(name)
 	return Types[Key]
 end
 
+function Utilitys.getKeyByValue(t, val)
+	for k,v in pairs(t) do
+		if v == val then
+			return k
+		end
+	end
+end
+
 function Utilitys.getOrientation(base, other)
 	local orientation
 	if other.x > base.x then

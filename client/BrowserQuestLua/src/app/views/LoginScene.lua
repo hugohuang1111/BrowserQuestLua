@@ -62,7 +62,7 @@ function LoginScene:onCreate()
             if "ended" == event.name then
                 local name = textfield:getString()
                 if name and string.len(name) > 0 then
-                    local playerInfo = Game:getPlayerData()
+                    local playerInfo = Game:getPlayerData() or {}
                     playerInfo.nickName = name
                     Game:setPlayerData(playerInfo)
                     Game:saveData()
