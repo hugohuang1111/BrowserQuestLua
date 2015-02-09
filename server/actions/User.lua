@@ -17,6 +17,8 @@ function User:welcome(args)
 		return msg:getData()
 	end
 
+	local onLine = World:getOnlinePlayer()
+
 	local player = World:getPlayerEntity(playerInfo.nickName, playerInfo.id)
 
 	playerInfo = player:getPlayerInfo()
@@ -24,9 +26,12 @@ function User:welcome(args)
 	local body = {}
 	body.playerInfo = playerInfo
 	body.entitysStatic = World:getEntitysStaticInfo()
+	body.onlinePlayers = onLine
 
 	msg:setBody(body)
-	return msg:getData()
+	self.connect_:sendMessageToSelf(msg:getString())
+
+	World:playerEntry(playerInfo.id)
 end
 
 return User

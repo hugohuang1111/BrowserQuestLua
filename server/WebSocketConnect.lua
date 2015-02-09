@@ -5,6 +5,7 @@ local WebSocketConnectBase = require("server.base.WebSocketConnectBase")
 local WebSocketConnect = class("WebSocketConnect", WebSocketConnectBase)
 
 function WebSocketConnect:ctor(config)
+    printInfo("HTL     WebSocketConnect ctor")
     WebSocketConnect.super.ctor(self, config)
 
     local mapFile = self.config.appRootPath .. "/maps/world_server.json"
@@ -26,6 +27,10 @@ end
 
 function WebSocketConnect:beforeConnectClose()
 	printInfo("WebSocketConnect beforeConnectClose")
+    local id = self:getConnectTag()
+    if id then
+        World:setPlayerStatus(id, false)
+    end
     World:unsubscribeChannel()
     -- cleanup
     -- self.battle:quit()

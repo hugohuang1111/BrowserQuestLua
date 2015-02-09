@@ -59,10 +59,11 @@ function GameScene:createMap()
 
 	self.camera_ = Camera.new(map)
 	-- create player
-	local player = Game:createPlayer()
+	local player = Game:createUser()
 	self.camera_:look(player)
 
 	self:createEntitys()
+	Game:createOnlinePlayers()
 
 	-- local rat = require("app.models.MobRat").new()
 	-- rat:setMapPos(cc.p(17, 288))
@@ -81,6 +82,10 @@ end
 function GameScene:createEntitys()
 	local gameInfo = Game:getGameInfo()
 	local entitys = gameInfo.entitysStatic
+
+	if not entitys then
+		return
+	end
 
 	for i,entityInfo in ipairs(entitys) do
 		self:createEntity(entityInfo)
@@ -142,16 +147,16 @@ function GameScene:onTouchEnded(touch, event)
 	if entity then
 		local entityType = entity:getType()
 		if entity.TYPE_MOBS_BEGIN < entityType and entityType < entity.TYPE_MOBS_END then
-			Game:getPlayer():attack(entity)
+			Game:getUser():attack(entity)
 		elseif entity.TYPE_NPCS_BEGIN < entityType and entityType < entity.TYPE_NPCS_END then
-			Game:getPlayer():talk(entity)
+			Game:getUser():talk(entity)
 		elseif (entity.TYPE_ARMORS_BEGIN < entityType and entityType < entity.TYPE_ARMORS_END)
 			or (entity.TYPE_WEAPONS_BEGIN < entityType and entityType < entity.TYPE_WEAPONS_END) then
-			Game:getPlayer():loot(entity)
-			-- Game:getPlayer():changeWeapon("axe.png")
+			Game:getUser():loot(entity)
+			-- Game:getUser():changeWeapon("axe.png")
 		end
 	else
-		Game:getPlayer():walk(mapPos)
+		Game:getUser():walk(mapPos)
 		-- local drawNode = Utilitys.genPathNode(path)
 		-- Game:getMap():removeChildByTag(111)
 		-- Game:getMap():addChild(drawNode, 100, 111)
@@ -160,7 +165,7 @@ end
 
 function GameScene:onKeyPressed(keyCode, event)
 	-- scheduleScriptFunc(unsigned int handler, float interval, bool paused)
-	local player = Game.getInstance():getPlayer()
+	local player = Game.getInstance():getUser()
 	if cc.KeyCode.KEY_LEFT_ARROW == keyCode then
 		player:walkStep(Orientation.LEFT)
 	elseif cc.KeyCode.KEY_RIGHT_ARROW == keyCode then

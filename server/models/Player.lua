@@ -2,6 +2,14 @@
 local Entity = import(".Entity")
 local Player = class("Player", Entity)
 
+function Player:ctor(...)
+	Player.super.ctor(self, ...)
+
+	self.attributes_.armor = "clotharmor.png"
+	self.attributes_.weapon = "sword1.png"
+	self.attributes_.nickName = "unknow"
+end
+
 function Player:load(entityId)
 	local ok = Player.super.load(self, entityId)
 
@@ -11,13 +19,15 @@ function Player:load(entityId)
 
 	local attr = self.attributes_
 	local vals = self.redis_:command("HMGET", entityId, "armor", "weapon", "nickName")
+	vals = self:transRedisNull(vals)
 	attr.armor = vals[1]
 	attr.weapon = vals[2]
-	attri.nickName = vals[3]
+	attr.nickName = vals[3]
+	attr.id = entityId
 end
 
 function Player:save()
-	Player.super.save()
+	Player.super.save(self)
 
 	local attr = self.attributes_
 	self.redis_:command("HMSET", attr.id,
@@ -33,7 +43,7 @@ function Player:getPlayerInfo()
 	playerInfo.weaponName = attr.weapon
 	playerInfo.nickName = attr.nickName
 	playerInfo.pos = attr.pos
-	playerInfo.id = idCounter
+	playerInfo.id = attr.id
 
 	return playerInfo
 end

@@ -135,6 +135,10 @@ function Character:walkTo(pos)
 end
 
 function Character:walkPath(path)
+	if not path then
+		return
+	end
+
 	if path[1].x == self.curPos_.x and path[1].y == self.curPos_.y then
 		table.remove(path, 1)
 	end
@@ -174,6 +178,9 @@ function Character:walkStep(dir, step)
 	-- TODO check the cur pos is valid
 
 	pos = cur
+	local origin = self.curPos_
+	local destination = pos
+
 	local args = Utilitys.pos2px(pos)
 	args.time = Character.MOVE_STEP_TIME * step
 	args.onComplete = handler(self, self.onWalkStepComplete_)
@@ -182,6 +189,8 @@ function Character:walkStep(dir, step)
 	self.view_:moveTo(args)
 
 	self:doEvent("move", dir)
+
+	Game:sendCmd("play.move", {id = self.id, from = origin, to = destination})
 end
 
 function Character:onWalkStepComplete_()
@@ -270,7 +279,7 @@ function Character:playAtk(orientation)
 		self:play("atk_right", args)
 	end
 
-	Game:sendCmd("play.atk", {sender = self.id, target = self.attackEntity_:getId()})
+	Game:sendCmd("play.attack", {sender = self.id, target = self.attackEntity_:getId()})
 end
 
 function Character:distanceWith(entity)
@@ -369,6 +378,32 @@ function Character:getBubble_()
 	end
 
 	return bg
+end
+
+function Character:showReduceHealth(val)
+	local ttfConfig = {
+		fontFilePath = "fonts/arial.ttf",
+		fontSize = 24
+		}
+	local label = cc.Label:createWithTTF(ttfConfig, tostring(val), cc.VERTICAL_TEXT_ALIGNMENT_CENTER)
+	label:setTextColor(cc.c4b(250, 0, 0, 250))
+
+	label:addTo(self.view_)
+	label:setPositionY(self.json_.height + 10)
+
+	local time = 1
+	local fadeOut = cc.FadeOut:create(time)
+	local moveBy = cc.MoveBy:create(time, {y = 20})
+	local action = cc.Spawn:create(fadeOut, moveBy)
+	label:runAction(action)
+
+	-- remove label after time + 1
+	local schedule = cc.Director:getInstance():getScheduler()
+	local handle
+	handle = schedule:scheduleScriptFunc(function()
+		schedule:unscheduleScriptEntry(handle)
+		label:removeSelf()
+	end, time + 1, false)
 end
 
 

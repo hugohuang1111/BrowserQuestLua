@@ -85,6 +85,8 @@ function Game:createNet()
 end
 
 function Game:netCallback(data)
+	printInfo("Game:netCallback data:%s", tostring(data))
+
 	local msg = NetMsg.parser(data)
 	if not msg:isOK() then
 		printError("Game:netCallback netError:%d", msg:getError())
@@ -96,9 +98,34 @@ function Game:netCallback(data)
 	if "user.welcome" == action then
 		self.gameState.playerInfo = body.playerInfo
 		self.gameInfo_.entitysStatic = body.entitysStatic
+		self.gameInfo_.onlinePlayers = body.onlinePlayers
 		app:enterScene("GameScene")
-		print("htl recb entity number:" .. #self.gameInfo_.entitysStatic)
+	elseif "user.entry" == action then
+		if body.id ~= self.user_:getId() then
+			self:createPlayer(body)
+		end
 	elseif "user.bye" == action then
+		local entity = self:findEntityById(body.id)
+		if entity then
+			self:removeEntity(entity)
+		end
+	elseif "play.move" == action then
+		if body.id ~= self.user_:getId() then
+			local entity = self:findEntityById(body.id)
+			if entity then
+				entity:doEvent("stop")
+				entity:setMapPos(body.orig)
+				entity:walk(body.dest)
+			end
+		end
+	elseif "play.reborn" == action then
+		local entity = self:findEntityById(body.id)
+		entity:setMapPos(body.pos)
+	elseif "play.attack" == action then
+		local entity = self.findEntityById(body.target)
+		if entity then
+			entity:showReduceHealth(body.healthChange)
+		end
 	end
 end
 
@@ -153,16 +180,30 @@ function Game:getMapSizePx()
 	return cc.size(self.mapSize_.width * self.tileSize_.width, self.mapSize_.height * self.tileSize_.height)
 end
 
-function Game:createPlayer()
+function Game:createUser()
 	local playerInfo = self:getPlayerData()
+	local player = self:createPlayer(playerInfo)
+	self.user_ = player
+
+	return player
+end
+
+function Game:createOnlinePlayers()
+	local onlinePlayers = self.gameInfo_.onlinePlayers
+
+	for i,v in ipairs(onlinePlayers) do
+		self:createPlayer(v)
+	end
+end
+
+function Game:createPlayer(playerInfo)
 	local player = require("app.models.Player").new({
 		image = playerInfo.imageName,
 		weaponName = playerInfo.weaponName,
 		name = playerInfo.nickName
 		})
 	player:setMapPos(playerInfo.pos)
-
-	self.user_ = player
+	player:setId(playerInfo.id)
 
 	self.map_:addChild(player:getView(), 201)
 	self:addEntity(player)
@@ -170,7 +211,7 @@ function Game:createPlayer()
 	return player
 end
 
-function Game:getPlayer()
+function Game:getUser()
 	return self.user_
 end
 
@@ -216,6 +257,14 @@ function Game:findEntityByPos(p)
 	end
 
 	return entitys
+end
+
+function Game:findEntityById(id)
+	for k,v in pairs(self.entitys_) do
+		if v:getId() == id then
+			return v
+		end
+	end
 end
 
 function Game:findPath(endPoint, startPoint)

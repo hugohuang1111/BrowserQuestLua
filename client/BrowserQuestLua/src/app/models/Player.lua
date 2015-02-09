@@ -12,7 +12,7 @@ function Player:ctor(args)
 	self.weaponName_ = args.weaponName
 	self.name_ = args.name
 
-	args.type = NPC.TYPE_WARRIOR
+	args.type = Character.TYPE_WARRIOR
 	
 	Player.super.ctor(self, args)
 

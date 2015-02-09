@@ -14,6 +14,10 @@ function Entity:ctor(attribute)
 		self.attributes_ = attribute
 	else
 		self.attributes_ = {}
+		self.attributes_.healthMax = 100
+		self.attributes_.health = self.attributes_.healthMax
+		self.attributes_.type = Types.TYPE_NONE
+		self.attributes_.pos = cc.p(0, 0)
 	end
 end
 
@@ -27,26 +31,57 @@ end
 
 function Entity:save()
 	local attr = self.attributes_
-	self.redis_:command("HMSET", attr.id,
-		"posX", attr.pos.x,
-		"posY", attr.pos.y,
+	local redis = self.redis_ or World:getRedis()
+	self.redis_ = redis
+	redis:command("HMSET", attr.id,
+		"posX", attr.pos.x or 0,
+		"posY", attr.pos.y or 0,
 		"health", attr.health,
-		"type", attr.type)
+		"healthMax", attr.healthMax,
+		"type", attr.type or Types.TYPE_NONE)
 end
 
 function Entity:load(entityId)
 	local id = entityId or self.attributes_.id
 	self.attributes_.id = id
-	local vals = self.redis_:command("HMGET", id, "posX", "posY", "health", "type")
+	local redis = self.redis_ or World:getRedis()
+	self.redis_ = redis
+	local vals = redis:command("HMGET", id, "posX", "posY", "health", "healthMax", "type")
 	if not vals then
 		return false
 	end
+	vals = self:transRedisNull(vals)
 	local attr = self.attributes_
-	attr.pos = cc.p(vals[1], vals[2])
+	attr.pos = cc.p(vals[1] or 0, vals[2] or 0)
 	attr.health = vals[3]
-	attr.type = vals[4]
+	attr.healthMax = vals[4]
+	attr.type = vals[5]
 
 	return true
+end
+
+function Entity:transRedisNull(val)
+	local newV
+	local types = type(val)
+
+	local f = function(v)
+		if "userdata: NULL" == tostring(v) then
+			return nil
+		else
+			return v
+		end
+	end
+
+	if "table" == types then
+		for k,v in pairs(val) do
+			val[k] = self:transRedisNull(v)
+		end
+		newV = val
+	else
+		newV = f(val)
+	end
+
+	return newV
 end
 
 function Entity:setRedis(redis)
@@ -91,8 +126,41 @@ function Entity:getId()
 	return self.attributes_.id
 end
 
+function Entity:setMaxHealth(max)
+	self.attributes_.healthMax = max
+end
+
 function Entity:setHealth(health)
 	self.attributes_.health = health
+end
+
+function Entity:healthChange(val)
+	self.attributes_.health = self.attributes_.health + val
+
+	if self.attributes_.health > self.attributes_.healthMax then
+		self.attributes_.health = self.attributes_.healthMax
+	elseif self.attributes_.health <= 0 then
+		self:reborn()
+	end
+end
+
+function Entity:getInfo()
+	local attr = self.attributes_
+	local entityInfo = {}
+	entityInfo.imageName = attr.armor
+	entityInfo.pos = attr.pos
+	entityInfo.id = attr.id
+	entityInfo.type = attr.type
+
+	return entityInfo
+end
+
+function Entity:reborn()
+	local pos = self.attributes_.pos
+	self.attributes_.pos = cc.p(math.random(pos.x - 5, pos.x + 5), math.random(pos.y - 5, pos.y + 5))
+	self.attributes_.health = self.attributes_.healthMax
+
+	World:broadcast("play.reborn", self:getInfo())
 end
 
 function Entity:isDead()
