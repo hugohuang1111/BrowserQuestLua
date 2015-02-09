@@ -62,7 +62,7 @@ function GameScene:createMap()
 	local player = Game:createUser()
 	self.camera_:look(player)
 
-	self:createEntitys()
+	Game:createEntitys()
 	Game:createOnlinePlayers()
 
 	-- local rat = require("app.models.MobRat").new()
@@ -77,43 +77,6 @@ function GameScene:createMap()
 	-- local entity = require("app.models.ItemAxe").new()
 	-- entity:setMapPos(cc.p(16, 293))
 	-- Game:addObject(entity)
-end
-
-function GameScene:createEntitys()
-	local gameInfo = Game:getGameInfo()
-	local entitys = gameInfo.entitysStatic
-
-	if not entitys then
-		return
-	end
-
-	for i,entityInfo in ipairs(entitys) do
-		self:createEntity(entityInfo)
-	end
-end
-
-function GameScene:createEntity(entityInfo)
-	local cls
-	local key = Utilitys.getKeyByValue(Types, entityInfo.type)
-	if not key then
-		return
-	end
-	local name = string.ucfirst(string.lower(string.sub(key, 6)))
-	if entityInfo.type > Entity.TYPE_MOBS_BEGIN and entityInfo.type < Entity.TYPE_MOBS_END then
-		cls = require("app.models.Mob" .. name)
-	elseif entityInfo.type > Entity.TYPE_NPCS_BEGIN and entityInfo.type < Entity.TYPE_NPCS_END then
-		if string.len(name) > 3 and "NPC" == string.upper(string.sub(name, -3)) then
-			name = string.sub(name, 1, -4)
-		end
-		cls = require("app.models.NPC" .. name)
-	else
-		printInfo("GameScene:createEntity unsupport entity:" .. name)
-		return
-	end
-	local entity = cls.new()
-	entity:setMapPos(entityInfo.pos)
-	entity:setId(entityInfo.id)
-	Game:addObject(entity)
 end
 
 

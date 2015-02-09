@@ -1,7 +1,8 @@
 
 local NetMsgConstants = import("..network.NetMsgConstants")
 local NetMsg = import("..network.NetMsg")
-
+local Utilitys = import(".Utilitys")
+local Types = import(".Types")
 local Game = class("Game")
 local AStar = import(".AStar")
 local gInstance = nil
@@ -85,7 +86,11 @@ function Game:createNet()
 end
 
 function Game:netCallback(data)
-	printInfo("Game:netCallback data:%s", tostring(data))
+	local str = tostring(data)
+	if string.len(str) > 1000 then
+		str = string.sub(str, 1, 1000)
+	end
+	-- printInfo("Game:netCallback data:%s", str)
 
 	local msg = NetMsg.parser(data)
 	if not msg:isOK() then
@@ -95,11 +100,13 @@ function Game:netCallback(data)
 
 	local body = msg:getBody()
 	local action = msg:getAction()
+	printInfo("Game:netCallback action:%s", action)
 	if "user.welcome" == action then
 		self.gameState.playerInfo = body.playerInfo
 		self.gameInfo_.entitysStatic = body.entitysStatic
 		self.gameInfo_.onlinePlayers = body.onlinePlayers
 		app:enterScene("GameScene")
+		self:saveData()
 	elseif "user.entry" == action then
 		if body.id ~= self.user_:getId() then
 			self:createPlayer(body)
@@ -118,13 +125,19 @@ function Game:netCallback(data)
 				entity:walk(body.dest)
 			end
 		end
-	elseif "play.reborn" == action then
+	elseif "play.dead" == action then
 		local entity = self:findEntityById(body.id)
-		entity:setMapPos(body.pos)
+		entity:doEvent("kill")
+	elseif "play.reborn" == action then
+		self:createEntity(body)
 	elseif "play.attack" == action then
-		local entity = self.findEntityById(body.target)
+		local entity = self:findEntityById(body.target)
 		if entity then
 			entity:showReduceHealth(body.healthChange)
+		end
+		if body.dead then
+			self.user_:doEvent("stop")
+			self.user_.fllowEntity_ = nil
 		end
 	end
 end
@@ -178,6 +191,43 @@ end
 
 function Game:getMapSizePx()
 	return cc.size(self.mapSize_.width * self.tileSize_.width, self.mapSize_.height * self.tileSize_.height)
+end
+
+function Game:createEntitys()
+	local gameInfo = self.gameInfo_
+	local entitys = gameInfo.entitysStatic
+
+	if not entitys then
+		return
+	end
+
+	for i,entityInfo in ipairs(entitys) do
+		self:createEntity(entityInfo)
+	end
+end
+
+function Game:createEntity(entityInfo)
+	local cls
+	local key = Utilitys.getKeyByValue(Types, entityInfo.type)
+	if not key then
+		return
+	end
+	local name = string.ucfirst(string.lower(string.sub(key, 6)))
+	if entityInfo.type > Types.TYPE_MOBS_BEGIN and entityInfo.type < Types.TYPE_MOBS_END then
+		cls = require("app.models.Mob" .. name)
+	elseif entityInfo.type > Types.TYPE_NPCS_BEGIN and entityInfo.type < Types.TYPE_NPCS_END then
+		if string.len(name) > 3 and "NPC" == string.upper(string.sub(name, -3)) then
+			name = string.sub(name, 1, -4)
+		end
+		cls = require("app.models.NPC" .. name)
+	else
+		printInfo("Game:createEntity unsupport entity:" .. name)
+		return
+	end
+	local entity = cls.new()
+	entity:setMapPos(entityInfo.pos)
+	entity:setId(entityInfo.id)
+	self:addObject(entity)
 end
 
 function Game:createUser()

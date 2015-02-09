@@ -47,6 +47,8 @@ function Character:onAfterEvent(event)
 		self:playIdle()
 	elseif "atk" == event.to then
 		self:playAtk()
+	elseif "death" == event.to then
+		self:playDeath()
 	else
 		bHandler = false
 	end
@@ -85,7 +87,6 @@ function Character:fllow(entity)
 
 	self.fllowEntity_:on("exit",
 		function()
-			printInfo("Character exit")
 			self.fllowEntity_ = nil
 		end)
 end
@@ -282,6 +283,15 @@ function Character:playAtk(orientation)
 	Game:sendCmd("play.attack", {sender = self.id, target = self.attackEntity_:getId()})
 end
 
+function Character:playDeath()
+	local args = {
+		isOnce = true,
+		onComplete = function()
+			Game:removeEntity(self)
+		end}
+	self:play("death", args)
+end
+
 function Character:distanceWith(entity)
 	local disX = math.abs(entity.curPos_.x - self.curPos_.x)
 	local disY = math.abs(entity.curPos_.y - self.curPos_.y)
@@ -400,10 +410,19 @@ function Character:showReduceHealth(val)
 	-- remove label after time + 1
 	local schedule = cc.Director:getInstance():getScheduler()
 	local handle
-	handle = schedule:scheduleScriptFunc(function()
-		schedule:unscheduleScriptEntry(handle)
+	label.handle = schedule:scheduleScriptFunc(function()
+		schedule:unscheduleScriptEntry(label.handle)
+		label.handle = nil
 		label:removeSelf()
 	end, time + 1, false)
+
+	label:enableNodeEvents()
+	label.onExit = function()
+		if label.handle then
+			schedule:unscheduleScriptEntry(label.handle)
+			label.handle = nil
+		end
+	end
 end
 
 

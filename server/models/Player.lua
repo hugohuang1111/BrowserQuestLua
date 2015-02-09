@@ -39,11 +39,11 @@ end
 function Player:getPlayerInfo()
 	local attr = self.attributes_
 	local playerInfo = {}
-	playerInfo.imageName = attr.armor
-	playerInfo.weaponName = attr.weapon
+	playerInfo.imageName = attr.armor or "clotharmor.png"
+	playerInfo.weaponName = attr.weapon or "sword1.png"
 	playerInfo.nickName = attr.nickName
 	playerInfo.pos = attr.pos
-	playerInfo.id = attr.id
+	playerInfo.id = tonumber(attr.id)
 
 	return playerInfo
 end

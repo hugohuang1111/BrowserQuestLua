@@ -52,7 +52,7 @@ function Net:wsOpen()
 end
 
 function Net:wsMessage(data)
-	printInfo("Net ws message")
+	-- printInfo("Net ws message")
 	if self.messageCB_ then
 		self.messageCB_(data)
 	end
@@ -112,7 +112,8 @@ function Net:sendCmd(cmd, args)
 end
 
 function Net:operCmd_()
-	for i,cmd in ipairs(self.sendCmds_) do
+	while true do
+		local cmd = self.sendCmds_[1]
 		if not cmd then
 			return
 		end
@@ -142,13 +143,14 @@ function Net:operCmd_()
 				return
 			elseif cc.WEBSOCKET_STATE_OPEN == self.ws_:getReadyState() then
 				self:sendReal_(cmd.data)
+				table.remove(self.sendCmds_, 1)
 			end
 		end
 	end
 end
 
 function Net:sendReal_(data)
-	printInfo("Net send real data:%s", data)
+	-- printInfo("Net send real data:%s", data)
 	self.ws_:sendString(data)
 end
 

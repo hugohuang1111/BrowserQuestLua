@@ -52,10 +52,10 @@ function Entity:load(entityId)
 	end
 	vals = self:transRedisNull(vals)
 	local attr = self.attributes_
-	attr.pos = cc.p(vals[1] or 0, vals[2] or 0)
-	attr.health = vals[3]
-	attr.healthMax = vals[4]
-	attr.type = vals[5]
+	attr.pos = cc.p(tonumber(vals[1] or 0), tonumber(vals[2] or 0))
+	attr.health = tonumber(vals[3])
+	attr.healthMax = tonumber(vals[4])
+	attr.type = tonumber(vals[5])
 
 	return true
 end
@@ -135,13 +135,21 @@ function Entity:setHealth(health)
 end
 
 function Entity:healthChange(val)
+	local redis = self.redis_ or World:getRedis()
+	self.redis_ = redis
+	self.attributes_.health = redis:command("HGET", self.attributes_.id, "health")
 	self.attributes_.health = self.attributes_.health + val
-
+	local afterHealth = self.attributes_.health
 	if self.attributes_.health > self.attributes_.healthMax then
 		self.attributes_.health = self.attributes_.healthMax
 	elseif self.attributes_.health <= 0 then
+		World:broadcast("play.dead", {id = self.attributes_.id})
 		self:reborn()
 	end
+
+	redis:command("HSET", self.attributes_.id, "health", self.attributes_.health)
+
+	return afterHealth
 end
 
 function Entity:getInfo()

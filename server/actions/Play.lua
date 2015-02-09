@@ -10,7 +10,7 @@ function Play:move(args)
 	player:setPos(body.to)
 	player:save()
 
-	World:playerMove(args)
+	-- World:playerMove(args)
 end
 
 function Play:attack(args)
@@ -21,10 +21,11 @@ function Play:attack(args)
 	player:save()
 	local mob = World:getEntityById(body.target)
 	local reduceBoold = -(10 + math.random(1, 10))
-	mob:healthChange(reduceBoold)
+	local afterboold = mob:healthChange(reduceBoold)
 
+	printInfo("HTL Play attack boold:%d", afterboold)
 	body.healthChange = reduceBoold
-	body.dead = true
+	body.dead = (afterboold <= 0)
 	World:sendMsg(msg:getAction(), body)
 end
 

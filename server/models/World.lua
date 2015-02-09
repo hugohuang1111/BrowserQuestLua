@@ -112,6 +112,8 @@ function World:getPlayerInfo(name, id)
 	math.randomseed(os.time())
 	playerInfo.pos = entity:getPos() or cc.p(math.random(35, 40), math.random(220, 240)) -- cc.p(35, 230)
 
+	dump(playerInfo.pos, "playerpos:")
+	dump(entity:getPos(), "playerpos:")
 	local idCounter
 	idCounter = entity:getId()
 	if not idCounter then

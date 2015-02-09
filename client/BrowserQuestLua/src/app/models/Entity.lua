@@ -10,6 +10,7 @@ Entity.idx_ = 1
 Entity.ANIMATION_IDLE_TIME = 0.2 	-- idle animation frame time
 Entity.ANIMATION_MOVE_TIME = 0.1 	-- move animation frame time
 Entity.ANIMATION_ATK_TIME  = 0.1 	-- attack animation frame time
+Entity.ANIMATION_DEATH_TIME  = 0.1 	-- attack animation frame time
 
 Entity.VIEW_TAG_SPRITE = 101
 
@@ -173,7 +174,7 @@ end
 
 function Entity:getAnimationTime(actionName)
 	local pos = string.find(actionName, "_")
-	local action
+	local action = actionName
 	if pos then
 		action = string.sub(actionName, 1, pos - 1)
 	end
@@ -184,6 +185,8 @@ function Entity:getAnimationTime(actionName)
 		return self.ANIMATION_MOVE_TIME
 	elseif "atk" == action then
 		return self.ANIMATION_ATK_TIME
+	elseif "death" == action then
+		return self.ANIMATION_DEATH_TIME
 	else
 		return self.ANIMATION_IDLE_TIME
 	end
@@ -221,6 +224,11 @@ function Entity:parseFrames_(imageName, imageJson, aniType)
 
 	local json = imageJson["animations"][aniType]
 	local needFlip
+	if "death" == aniType and not json then
+		imageName = "death.png"
+		imageJson = self:parseJson_(imageName)
+		json = imageJson["animations"][aniType]
+	end
 	if not json then
 		local spos, epos = string.find(aniType, "_")
 		if spos then
