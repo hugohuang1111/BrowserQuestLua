@@ -116,13 +116,26 @@ function Game:netCallback(data)
 		if entity then
 			self:removeEntity(entity)
 		end
+	elseif "user.reborn" == action then
+		self.gameState.playerInfo = body
+		self:createUser()
+
+		app.curScene.camera_:look(self.user_, 1)
+		self:onPlayerUIExit(handler(app.curScene, app.curScene.showRevive))
+
+		local scene = cc.Director:getInstance():getRunningScene()
+		local deadBg = app.curScene:getChildByTag(201)
+		if deadBg then
+			deadBg:removeSelf()
+		end
 	elseif "play.move" == action then
-		if body.id ~= self.user_:getId() then
+		if self.user_ and body.id ~= self.user_:getId() then
 			local entity = self:findEntityById(body.id)
+			printInfo("enity %s", tostring(entity))
 			if entity then
 				entity:doEvent("stop")
-				entity:setMapPos(body.orig)
-				entity:walk(body.dest)
+				entity:setMapPos(body.from)
+				entity:walk(body.to)
 			end
 		end
 	elseif "play.dead" == action then
@@ -131,13 +144,15 @@ function Game:netCallback(data)
 	elseif "play.reborn" == action then
 		self:createEntity(body)
 	elseif "play.attack" == action then
-		local entity = self:findEntityById(body.target)
-		if entity then
-			entity:showReduceHealth(body.healthChange)
+		local target = self:findEntityById(body.target)
+		local sender = self:findEntityById(body.sender)
+
+		if target then
+			target:showReduceHealth(body.healthChange)
+			target:attackIf(sender)
 		end
 		if body.dead then
-			self.user_:doEvent("stop")
-			self.user_.fllowEntity_ = nil
+			sender:stopAtk()
 		end
 	end
 end
@@ -156,6 +171,10 @@ function Game:send(data)
 end
 
 --[[ DATA NETWORK PART END ]]
+
+function Game:onPlayerUIExit(callback)
+	self.user_:on("exit", function() callback() end)
+end
 
 function Game:getGameInfo()
 	return self.gameInfo_
@@ -233,6 +252,7 @@ end
 function Game:createUser()
 	local playerInfo = self:getPlayerData()
 	local player = self:createPlayer(playerInfo)
+	player:setUser(true)
 	self.user_ = player
 
 	return player
@@ -268,7 +288,7 @@ end
 
 
 function Game:isSelf(entity)
-	if entity.id == 0 then
+	if entity == self.user_ then
 		return true
 	end
 	return false
@@ -316,6 +336,8 @@ function Game:findEntityById(id)
 		end
 	end
 end
+
+
 
 function Game:findPath(endPoint, startPoint)
 	startPoint = startPoint or self.user_:getMapPos()

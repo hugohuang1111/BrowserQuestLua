@@ -32,11 +32,10 @@ end
 
 function World:initMapIf()
 	local redis = self.redis_
-	redis:command("SET", _MAP_LOAD_, "no")
+	-- redis:command("SET", _MAP_LOAD_, "no")
 	local isLoaded = redis:command("GET", _MAP_LOAD_)
 	local entitys = {}
 	if not isLoaded or "no" == isLoaded then
-		printInfo("htl map load:%s", tostring(isLoaded))
 		local map = Map.new(self.mapPath_)
 
 		-- generate static entity
@@ -95,6 +94,10 @@ function World:getEntityById(id)
 	return entity
 end
 
+function World:getRebornPos()
+	return cc.p(math.random(32, 43), math.random(224, 232))
+end
+
 function World:getPlayerInfo(name, id)
 	local entity = Player.new()
 	local attr
@@ -110,10 +113,8 @@ function World:getPlayerInfo(name, id)
 
 	-- born position
 	math.randomseed(os.time())
-	playerInfo.pos = entity:getPos() or cc.p(math.random(35, 40), math.random(220, 240)) -- cc.p(35, 230)
+	playerInfo.pos = entity:getPos() or self:getRebornPos() -- cc.p(35, 230)
 
-	dump(playerInfo.pos, "playerpos:")
-	dump(entity:getPos(), "playerpos:")
 	local idCounter
 	idCounter = entity:getId()
 	if not idCounter then
@@ -178,6 +179,20 @@ function World:getPlayerById(id)
 	return player
 end
 
+function World:getEntity(id)
+	local cls
+	if id >= IDCounterBegin then
+		cls = Player
+	else
+		cls = Entity
+	end
+
+	local entity = cls.new()
+	entity:load(id)
+
+	return entity
+end
+
 function World:setPlayerStatus(id, isOnline)
 	if isOnline then
 		self.redis_:command("SADD", _REDIS_KEY_SETS_PLAYER_, id)
@@ -226,22 +241,18 @@ function World:playerQuit(id)
 	local playerId = id
 	if not playerId then
 		playerId = self.connect_:getConnectTag()
+		playerId = tonumber(playerId)
 	end
 	self:setPlayerStatus(playerId, false)
 
 	local msg = NetMsg.new()
 	msg:setAction("user.bye")
-	msg:setBody({id = id})
+	msg:setBody({id = playerId})
 
 	self.connect_:sendMessageToChannel(_CHANNEL_ALL_, msg:getString())
 end
 
 function World:playerMove(args)
-	local playerId = id
-	if not playerId then
-		playerId = self.connect_:getConnectTag()
-	end
-
 	local msg = NetMsg.new()
 	msg:setAction("play.move")
 	msg:setBody(args)

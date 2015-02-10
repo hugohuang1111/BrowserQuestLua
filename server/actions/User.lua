@@ -11,8 +11,7 @@ end
 function User:welcome(args)
 	local msg = NetMsg.parser(args)
 	local playerInfo = msg:getBody()
-
-	printInfo("User:welcome id:%s", tostring(playerInfo.id))
+	msg:setBody(nil)
 
 	if not playerInfo.nickName or 0 == string.len(playerInfo.nickName) then
 		msg:setError(NetMsgConstants.ERROR_NICKNAME_NULL)
@@ -34,6 +33,28 @@ function User:welcome(args)
 	self.connect_:sendMessageToSelf(msg:getString())
 
 	World:playerEntry(playerInfo.id)
+end
+
+function User:reborn(args)
+	local msg = NetMsg.parser(args)
+	local playerInfo = msg:getBody()
+	msg:setBody(nil)
+
+	if not playerInfo.id or 0 == playerInfo.id then
+		msg:setError(NetMsgConstants.ERROR_NICKNAME_NULL)
+		return msg:getData()
+	end
+
+	local player = World:getPlayerById(playerInfo.id)
+	local pos = World:getRebornPos()
+	dump(pos, "reborn pos:")
+	player:setPos(pos)
+	player:resetHealth()
+	player:save()
+
+	msg:setBody(player:getPlayerInfo())
+
+	return msg:getData()
 end
 
 return User

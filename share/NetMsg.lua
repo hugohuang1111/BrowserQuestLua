@@ -91,6 +91,8 @@ function NetMsg:setDesc(str)
 			self.data_.desc = "logic error"
 		elseif NetMsgConstants.ERROR_NICKNAME_NULL == err then
 			self.data_.desc = "nickname is nil"
+		elseif NetMsgConstants.ERROR_ID_INVALID == err then
+			self.data_.desc = "invalid id"
 		else
 			self.data_.desc = "fail"
 		end

@@ -60,7 +60,9 @@ function GameScene:createMap()
 	self.camera_ = Camera.new(map)
 	-- create player
 	local player = Game:createUser()
-	self.camera_:look(player)
+	self.camera_:look(player, 1)
+
+	Game:onPlayerUIExit(handler(self, self.showRevive))
 
 	Game:createEntitys()
 	Game:createOnlinePlayers()
@@ -77,6 +79,42 @@ function GameScene:createMap()
 	-- local entity = require("app.models.ItemAxe").new()
 	-- entity:setMapPos(cc.p(16, 293))
 	-- Game:addObject(entity)
+end
+
+function GameScene:showRevive()
+	local bg = display.newSprite("#parchment.png")
+	bg:setTag(201)
+	bg:align(display.CENTER, display.cx, display.cy)
+	bg:setScaleX(0.1)
+	bg:setLocalZOrder(101)
+	bg:addTo(self)
+	bg:scaleTo({scaleX = 1, scaleY = 1, time = 1, onComplete = function()
+		local bounding = bg:getBoundingBox()
+		local ttfConfig = {
+			fontFilePath = "fonts/arial.ttf",
+			fontSize = 24
+			}
+		local label = cc.Label:createWithTTF(ttfConfig, "You Are Dead!", cc.VERTICAL_TEXT_ALIGNMENT_CENTER)
+		label:align(display.CENTER, bounding.width/2, bounding.height/2 + 10)
+		label:setTextColor(cc.c4b(0, 0, 0, 250))
+		label:addTo(bg)
+
+		ccui.Button:create("buttonRevive.png", "buttonRevive.png", "buttonRevive.png", ccui.TextureResType.plistType)
+		    :align(display.CENTER, bounding.width/2, bounding.height/2 - 30)
+		    :addTo(bg)
+		    :onTouch(function(event)
+		        if "ended" == event.name then
+		            local playerData = Game:getPlayerData()
+		            local player = Game:getUser()
+		            playerData.imageName = player.imageName_
+		            playerData.weaponName = player.weaponName_
+		            playerData.nickName = player.name_
+		            playerData.pos = player.curPos_
+		            playerData.id = player.id
+		            Game:sendCmd("user.reborn", playerData)
+		        end
+		    end)
+		end})
 end
 
 

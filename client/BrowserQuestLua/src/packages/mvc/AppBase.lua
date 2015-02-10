@@ -39,6 +39,7 @@ end
 function AppBase:enterScene(sceneName, transition, time, more)
     local view = self:createView(sceneName)
     view:showWithScene(transition, time, more)
+    self.curScene = view
     return view
 end
 

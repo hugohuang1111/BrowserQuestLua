@@ -102,7 +102,7 @@ end
 function Character:getStateByOrientation(state)
 	local pos = string.find(state, "_")
 	local newState = state
-	if not pos then
+	if not pos and "death" ~= newState then
 		if Orientation.DOWN == self.orientation_ then
 			newState = newState .. "_down"
 		elseif Orientation.UP == self.orientation_ then
@@ -191,7 +191,9 @@ function Character:walkStep(dir, step)
 
 	self:doEvent("move", dir)
 
-	Game:sendCmd("play.move", {id = self.id, from = origin, to = destination})
+	if Game:isSelf(self) then
+		Game:sendCmd("play.move", {id = self.id, from = origin, to = destination})
+	end
 end
 
 function Character:onWalkStepComplete_()
@@ -215,7 +217,6 @@ function Character:onWalkStepComplete_()
 				elseif self.talkEntity_ then
 					self.talkEntity_:talk()
 				elseif self.lootEntity_ then
-					printInfo("onWalkStepComplete_ lootEntity_")
 					self:lootItem(self.lootEntity_)
 				end
 			end
@@ -283,6 +284,12 @@ function Character:playAtk(orientation)
 	Game:sendCmd("play.attack", {sender = self.id, target = self.attackEntity_:getId()})
 end
 
+function Character:stopAtk()
+	self:doEvent("stop")
+	self.fllowEntity_ = nil
+	self.attackEntity_ = nil
+end
+
 function Character:playDeath()
 	local args = {
 		isOnce = true,
@@ -297,6 +304,13 @@ function Character:distanceWith(entity)
 	local disY = math.abs(entity.curPos_.y - self.curPos_.y)
 
 	return disX + disY
+end
+
+function Character:attackIf(entity)
+	if not entity or self.attackEntity_ == entity then
+		return
+	end
+	self:attack(entity)
 end
 
 function Character:attack(entity)

@@ -46,7 +46,7 @@ function LoginScene:onCreate()
     nameBg:align(display.CENTER, 120, parchmentSize.height - 100)
     nameBg:addTo(parchment)
 
-    local textfield = ccui.TextField:create("Name your character", "fonts/advocut-webfont.ttf", 20)
+    local textfield = ccui.TextField:create("Name your character", "fonts/fzkt.ttf", 20)
         :align(display.CENTER, nameBgSize.width/2, nameBgSize.height/2)
         :addTo(nameBg)
 

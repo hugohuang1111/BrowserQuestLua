@@ -43,7 +43,7 @@ end
 
 function Entity:load(entityId)
 	local id = entityId or self.attributes_.id
-	self.attributes_.id = id
+	self.attributes_.id = tonumber(id)
 	local redis = self.redis_ or World:getRedis()
 	self.redis_ = redis
 	local vals = redis:command("HMGET", id, "posX", "posY", "health", "healthMax", "type")
@@ -134,6 +134,10 @@ function Entity:setHealth(health)
 	self.attributes_.health = health
 end
 
+function Entity:resetHealth()
+	self.attributes_.health = self.attributes_.healthMax
+end
+
 function Entity:healthChange(val)
 	local redis = self.redis_ or World:getRedis()
 	self.redis_ = redis
@@ -146,6 +150,8 @@ function Entity:healthChange(val)
 		World:broadcast("play.dead", {id = self.attributes_.id})
 		self:reborn()
 	end
+
+	printf("Entity healthChange:%d id:%d", self.attributes_.health, self.attributes_.id)
 
 	redis:command("HSET", self.attributes_.id, "health", self.attributes_.health)
 
@@ -167,6 +173,8 @@ function Entity:reborn()
 	local pos = self.attributes_.pos
 	self.attributes_.pos = cc.p(math.random(pos.x - 5, pos.x + 5), math.random(pos.y - 5, pos.y + 5))
 	self.attributes_.health = self.attributes_.healthMax
+
+	self:save()
 
 	World:broadcast("play.reborn", self:getInfo())
 end

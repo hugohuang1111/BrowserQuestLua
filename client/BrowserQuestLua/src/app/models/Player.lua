@@ -11,12 +11,31 @@ Player.ANCHOR = cc.p(0.5, 0.5)
 function Player:ctor(args)
 	self.weaponName_ = args.weaponName
 	self.name_ = args.name
-
 	args.type = Character.TYPE_WARRIOR
 	
 	Player.super.ctor(self, args)
 
 	self:createNameLabel_()
+end
+
+function Player:setUser(isUser)
+	self.isUser_ = isUser
+
+	local label = self.view_:getChildByTag(Player.VIEW_TAG_NAME)
+	if not label then
+		return
+	end
+	if isUser then
+		label:setTextColor(cc.c4b(255, 0, 0, 255))
+		label:enableOutline(cc.c4b(0, 0, 0, 255), 1)
+	else
+		label:setTextColor(cc.c4b(250, 250, 250, 250))
+		label:enableOutline(cc.c4b(0, 0, 0, 250), 1)
+	end
+end
+
+function Player:isUser()
+	return self.isUser_
 end
 
 function Player:getView()
@@ -159,14 +178,27 @@ function Player:createNameLabel_()
 		fontSize = 14
 		}
 	local label = cc.Label:createWithTTF(ttfConfig, self.name_, cc.VERTICAL_TEXT_ALIGNMENT_CENTER)
-	if Game:isSelf(self) then
-		label:setTextColor(cc.c4b(255, 255, 0, 255))
+	if self.isUser_ then
+		label:setTextColor(cc.c4b(255, 0, 0, 255))
 		label:enableOutline(cc.c4b(0, 0, 0, 255), 1)
+	else
+		label:setTextColor(cc.c4b(250, 250, 250, 250))
+		label:enableOutline(cc.c4b(0, 0, 0, 250), 1)
 	end
 	label:align(display.CENTER)
 	label:setPosition(0, self.json_.height + 10)
 	self.view_:addChild(label)
 	label:setTag(Player.VIEW_TAG_NAME)
+end
+
+function Player:getInfo()
+	return {
+		imageName = self.imageName_,
+		weaponName = self.weaponName_,
+		nickName = self.name_,
+		pos = self.pos_,
+		id = self.id
+	}
 end
 
 return Player

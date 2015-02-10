@@ -47,7 +47,7 @@ function Camera:ctor(map)
 	self.tileSize_ = tileSize
 end
 
-function Camera:move(disX, disY)
+function Camera:move(disX, disY, time)
 	local disX = disX or 0
 	local disY = disY or 0
 	local posX, posY = self.map_:getPosition()
@@ -88,16 +88,22 @@ function Camera:move(disX, disY)
 		end
 	end
 
-	self.map_:setPosition(posX + disX, posY + disY)
+	if time then
+		self.map_:moveTo({x = posX + disX, y = posY + disY, time = time})
+	else
+		self.map_:setPosition(posX + disX, posY + disY)
+	end
 end
 
-function Camera:look(entity)
+function Camera:look(entity, time)
 	local p = entity:getMapPos()
 	local mapSize = Game:getMapSize()
 	local tileSize = Game:getTileSize()
 
 	local pos = cc.p(p.x * tileSize.width + tileSize.width/2, (mapSize.height - p.y) * tileSize.height - tileSize.height/2)
-	self:move(display.cx - pos.x, display.cy - pos.y)
+
+	local mapPosX, mapPosY = self.map_:getPosition()
+	self:move(display.cx - mapPosX - pos.x, display.cy - mapPosY - pos.y, time)
 end
 
 return Camera

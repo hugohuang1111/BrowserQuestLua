@@ -72,4 +72,8 @@ function Player:setArmor(armor)
 	self.attributes_.armor = armor
 end
 
+function Player:reborn()
+	-- Player reborn by user
+end
+
 return Player

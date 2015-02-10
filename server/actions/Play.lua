@@ -10,23 +10,22 @@ function Play:move(args)
 	player:setPos(body.to)
 	player:save()
 
-	-- World:playerMove(args)
+	World:broadcast("play.move", body)
 end
 
 function Play:attack(args)
 	local msg = NetMsg.parser(args)
 	local body = msg:getBody()
 
-	local player = World:getPlayerById(body.sender)
-	player:save()
-	local mob = World:getEntityById(body.target)
+	local sender = World:getEntity(body.sender)
+	sender:save()
+	local target = World:getEntity(body.target)
 	local reduceBoold = -(10 + math.random(1, 10))
-	local afterboold = mob:healthChange(reduceBoold)
-
-	printInfo("HTL Play attack boold:%d", afterboold)
+	local afterboold = target:healthChange(reduceBoold)
 	body.healthChange = reduceBoold
 	body.dead = (afterboold <= 0)
-	World:sendMsg(msg:getAction(), body)
+
+	return msg:getData()
 end
 
 return Play
