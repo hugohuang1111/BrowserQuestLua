@@ -28,4 +28,9 @@ function Play:attack(args)
 	return msg:getData()
 end
 
+function Play:chat(args)
+	local msg = NetMsg.parser(args)
+	World:broadcastNetMsg("play.chat", msg)
+end
+
 return Play

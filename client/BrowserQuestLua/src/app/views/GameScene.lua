@@ -7,15 +7,18 @@ local Utilitys = import("..models.Utilitys")
 local GameScene = class("GameScene", cc.load("mvc").ViewBase)
 local Scheduler = cc.Director:getInstance():getScheduler()
 
+local GAMESCENE_EMOJI_TAG = 101
+local GAMESCENE_WORLD_CHAT_TAG = 102
 
 function GameScene:onCreate()
-	-- self:createUI()
+	self:createUI()
 	self:createMap()
 end
 
 function GameScene:createUI()
 	local guiNode = display.newNode():addTo(self)
 	guiNode:setLocalZOrder(100)
+	self.guiNode_ = guiNode
 
 	local resPath = app:getResPath("border.png")
 	local sp = ccui.Scale9Sprite:create(resPath)
@@ -24,12 +27,23 @@ function GameScene:createUI()
 		:setContentSize(display.width, display.height)
 
 	local bottom = display.newNode():addTo(guiNode)
-	local bottomBg = display.newSprite("#bar-container.png")
-    	:align(display.LEFT_BOTTOM, 0, 0)
+	local bottomBg = ccui.Scale9Sprite:createWithSpriteFrameName("bar-container.png", cc.rect(460, 7, 40, 20))
+    	:align(display.CENTER_BOTTOM, display.cx, 0)
     	:addTo(bottom)
+    local size = bottomBg:getContentSize()
+    bottomBg:setContentSize(cc.size(display.width, size.height))
+
     local blood = display.newSprite("#healthbar.png")
     	:align(display.LEFT_BOTTOM, 3, 4)
     	:addTo(bottom)
+
+    local chatBtn = display.newSprite("#chatbtn.png")
+    	:align(display.LEFT_BOTTOM, display.right - 120, 4)
+    	:addTo(bottom)
+
+    chatBtn:onClick(handler(self, self.showEmojiTable))
+    
+    self:showWorldChat()
 end
 
 function GameScene:createMap()
@@ -63,6 +77,8 @@ function GameScene:createMap()
 	self.camera_:look(player, 1)
 
 	Game:onPlayerUIExit(handler(self, self.showRevive))
+	Game:onPlayerMove(handler(self, self.playerMoveHandler))
+	Game:onWorldChat(handler(self, self.addWorlChat))
 
 	Game:createEntitys()
 	Game:createOnlinePlayers()
@@ -115,6 +131,125 @@ function GameScene:showRevive()
 		        end
 		    end)
 		end})
+end
+
+function GameScene:playerMoveHandler(user)
+	if not user or not user:getView() then
+	end
+	local view = user:getView()
+	local pos = view:convertToWorldSpace(cc.p(0, 0))
+	if pos.x < display.width/3 or pos.x > display.width/3*2
+		or pos.y < display.height/3 or pos.y > display.height/3*2 then
+		self.camera_:look(user, 1)
+	end
+end
+
+function GameScene:showEmojiTable()
+	local guiNode = self.guiNode_
+	local node
+	node = guiNode:getChildByTag(GAMESCENE_EMOJI_TAG)
+	if node then
+		node:setVisible(true)
+	else
+		node = display.newNode()
+		local width = 5
+		local height = 3
+		local gridSize = cc.size(34, 34)
+		for y=1, height do
+			for x=1, width do
+				local imgName = "emoji/" .. ((y - 1) * width + x) .. ".jpg"
+				local img = display.newSprite(imgName)
+				local rect = img:getBoundingBox()
+				node:addChild(img)
+				img:align(display.LEFT_BOTTOM, gridSize.width * (x - 1), gridSize.height * (y - 1))
+			end
+		end
+		guiNode:addChild(node)
+		node:setTag(GAMESCENE_EMOJI_TAG)
+		node:setPosition(display.right - gridSize.width * width, 34)
+
+		node:onClick(function(touch)
+			local pos = node:convertToNodeSpace(touch:getLocation())
+			local line = math.ceil(pos.y/gridSize.height)
+			if line > height then
+				line = height
+			end
+			if line < 1 then
+				line = 1
+			end
+			local row = math.ceil(pos.x/gridSize.width)
+			if row > width then
+				row = width
+			end
+			if row < 1 then
+				row = 1
+			end
+			local idx = (line - 1) * width + row
+
+			-- send chat 
+			Game:sendCmd("play.chat", {id = Game:getUser():getId(), name = Game:getUser():getNickName(), msg = "emoji:" .. idx})
+			node:setVisible(false)
+		end)
+	end
+end
+
+function GameScene:showWorldChat()
+	local guiNode = self.guiNode_
+	local bgNode
+
+	bgNode = ccui.Scale9Sprite:createWithSpriteFrameName("chatbox.png")
+	local bgSize = cc.size(270, 34 * 5 + 20) -- only show last five chat
+	bgNode:setContentSize(bgSize)
+	bgNode:align(display.LEFT_BOTTOM, 5, 34)
+	bgNode:addTo(guiNode)
+
+	local clip = cc.ClippingRectangleNode:create()
+	local space = 20
+	bgSize.width = bgSize.width - space * 2
+	bgSize.height = bgSize.height - space
+	clip:setClippingRegion(bgSize)
+	clip:align(display.LEFT_BOTTOM, 5 + space, 34)
+	clip:addTo(guiNode)
+	clip:setTag(GAMESCENE_WORLD_CHAT_TAG)
+end
+
+function GameScene:addWorlChat(args)
+	dump(args, "args:")
+	local guiNode = self.guiNode_
+	local node = guiNode:getChildByTag(GAMESCENE_WORLD_CHAT_TAG)
+
+	local lineNode = display.newNode()
+	local ttfConfig = {
+			fontFilePath = "fonts/fzkt.ttf",
+			fontSize = 36
+			}
+	local account
+	if args.name then
+		account = args.name .. ": "
+	else
+		account = "[anonymous]: "
+	end
+	local name = cc.Label:createWithTTF(ttfConfig, account, cc.VERTICAL_TEXT_ALIGNMENT_CENTER)
+		:align(display.LEFT_BOTTOM, 0, 0)
+		:addTo(lineNode)
+	local nameSize = name:getContentSize()
+	local idx = string.match(args.msg, "emoji:(%d+)")
+	local msg = display.newSprite("emoji/" .. idx .. ".jpg")
+		:align(display.LEFT_BOTTOM, nameSize.width, 0)
+		:addTo(lineNode)
+
+	node:removeChildByTag(5)
+	for i=5, 1, -1 do
+		local child = node:getChildByTag(i)
+		if child then
+			local posX, posY = child:getPosition()
+			child:setPositionY(posY + 34)
+			child:setTag(i + 1)
+		end
+	end
+
+	lineNode:setTag(1)
+	lineNode:addTo(node)
 end
 
 

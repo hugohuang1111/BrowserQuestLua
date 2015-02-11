@@ -108,7 +108,7 @@ function Game:netCallback(data)
 		app:enterScene("GameScene")
 		self:saveData()
 	elseif "user.entry" == action then
-		if body.id ~= self.user_:getId() then
+		if self.user_ and body.id ~= self.user_:getId() then
 			self:createPlayer(body)
 		end
 	elseif "user.bye" == action then
@@ -122,6 +122,7 @@ function Game:netCallback(data)
 
 		app.curScene.camera_:look(self.user_, 1)
 		self:onPlayerUIExit(handler(app.curScene, app.curScene.showRevive))
+		self:onPlayerMove(handler(app.curScene, app.curScene.playerMoveHandler))
 
 		local scene = cc.Director:getInstance():getRunningScene()
 		local deadBg = app.curScene:getChildByTag(201)
@@ -154,6 +155,12 @@ function Game:netCallback(data)
 		if body.dead then
 			sender:stopAtk()
 		end
+	elseif "play.chat" == action then
+		local player = self:findEntityById(body.id)
+		if player then
+			player:talkSentence(body.msg)
+		end
+		self.showWorldChat_(body)
 	end
 end
 
@@ -174,6 +181,14 @@ end
 
 function Game:onPlayerUIExit(callback)
 	self.user_:on("exit", function() callback() end)
+end
+
+function Game:onPlayerMove(callback)
+	self.user_:on("move", function() callback(self.user_) end)
+end
+
+function Game:onWorldChat(callback)
+	self.showWorldChat_ = callback
 end
 
 function Game:getGameInfo()

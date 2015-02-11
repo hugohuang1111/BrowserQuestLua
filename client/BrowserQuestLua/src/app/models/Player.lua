@@ -49,6 +49,10 @@ function Player:getView()
 	return self.view_
 end
 
+function Player:getNickName()
+	return self.name_
+end
+
 function Player:changeCloth(name)
 	self.view_:removeChildByTag(Player.VIEW_TAG_SPRITE)
 

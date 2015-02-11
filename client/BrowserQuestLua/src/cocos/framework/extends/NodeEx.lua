@@ -120,6 +120,24 @@ function Node:scaleTo(args)
     return self
 end
 
+function Node:onClick(callback)
+    local listener = cc.EventListenerTouchOneByOne:create()
+    listener:setSwallowTouches(true)
+    listener:registerScriptHandler(function(touch, event)
+        local pos = touch:getLocation()
+        local nodePos = self:convertToWorldSpace(cc.p(0, 0))
+        local rect = cc.utils:getCascadeBoundingBox(self)
+        rect.x = nodePos.x
+        rect.y = nodePos.y
+        if cc.rectContainsPoint(rect, pos) then
+            return true
+        end
+    end, cc.Handler.EVENT_TOUCH_BEGAN)
+    listener:registerScriptHandler(callback, cc.Handler.EVENT_TOUCH_ENDED)
+    local eventDispatcher = cc.Director:getInstance():getEventDispatcher()
+    eventDispatcher:addEventListenerWithSceneGraphPriority(listener, self)
+end
+
 function Node:onUpdate(callback)
     self:scheduleUpdateWithPriorityLua(callback, 0)
     return self

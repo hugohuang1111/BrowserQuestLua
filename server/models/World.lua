@@ -267,6 +267,10 @@ function World:broadcast(action, args)
 	self.connect_:sendMessageToChannel(_CHANNEL_ALL_, msg:getString())
 end
 
+function World:broadcastNetMsg(action, netMsg)
+	self.connect_:sendMessageToChannel(_CHANNEL_ALL_, netMsg:getString())
+end
+
 function World:sendMsg(action, args)
 	local msg = NetMsg.new()
 	msg:setAction(action)

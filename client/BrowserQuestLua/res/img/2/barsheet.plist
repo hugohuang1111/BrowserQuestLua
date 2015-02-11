@@ -59,15 +59,28 @@
 		<key>chatbox.png</key>
 		<dict>
 			<key>frame</key>
-			<string>{{0,64},{90,32}}</string>
+			<string>{{480,96},{260,66}}</string>
 			<key>offset</key>
 			<string>{0,0}</string>
 			<key>rotated</key>
 			<false/>
 			<key>sourceColorRect</key>
-			<string>{{0,0},{90,32}}</string>
+			<string>{{0,0},{260,66}}</string>
 			<key>sourceSize</key>
-			<string>{90,32}</string>
+			<string>{260,66}</string>
+		</dict>
+		<key>chatbtn.png</key>
+		<dict>
+			<key>frame</key>
+			<string>{{203,34},{30,30}}</string>
+			<key>offset</key>
+			<string>{0,0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0,0},{30,30}}</string>
+			<key>sourceSize</key>
+			<string>{30,30}</string>
 		</dict>
 	</dict>
 	<key>metadata</key>

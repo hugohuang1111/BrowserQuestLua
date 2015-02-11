@@ -193,6 +193,7 @@ function Character:walkStep(dir, step)
 
 	if Game:isSelf(self) then
 		Game:sendCmd("play.move", {id = self.id, from = origin, to = destination})
+		self:dispatchEvent({name = "move"})
 	end
 end
 
@@ -338,35 +339,44 @@ function Character:talk(entity)
 		return
 	end
 	if 1 == self:distanceWith(self.talkEntity_) then
-		self.talkEntity_:talkSentence_()
+		self.talkEntity_:talkSentence()
 	end
 end
 
-function Character:talkSentence_()
-	self:showSentence_(self.sentences_[self.showSentenceIdx_])
-	self.showSentenceIdx_ = Utilitys.mod(self.showSentenceIdx_ + 1, #self.sentences_)
+function Character:talkSentence(sentence)
+	if sentence then
+		self:showSentence_(sentence)
+	else
+		self:showSentence_(self.sentences_[self.showSentenceIdx_])
+		self.showSentenceIdx_ = Utilitys.mod(self.showSentenceIdx_ + 1, #self.sentences_)
+	end
 
 	self:setDisappearTimer_()
 end
 
 function Character:showSentence_(sentence)
-	local ttfConfig = {
-		fontFilePath = "fonts/fzkt.ttf",
-		fontSize = 14
-		}
-	local label = cc.Label:createWithTTF(ttfConfig, sentence, cc.VERTICAL_TEXT_ALIGNMENT_CENTER)
-	-- label:setTextColor(cc.c4b(0, 0, 0, 255))
-	label:align(display.CENTER)
+	local content
+	local idx = string.match(sentence, "emoji:(%d+)")
+	if idx then
+		content = display.newSprite("emoji/" .. tostring(idx) .. ".jpg")
+	else
+		local ttfConfig = {
+			fontFilePath = "fonts/fzkt.ttf",
+			fontSize = 14
+			}
+		content = cc.Label:createWithTTF(ttfConfig, sentence, cc.VERTICAL_TEXT_ALIGNMENT_CENTER)
+		content:align(display.CENTER)
+	end
 	local bg = self:getBubble_()
 	bg:setOpacity(255)
 	bg:removeAllChildren()
-	bg:addChild(label)
+	bg:addChild(content)
 
-	local size = label:getContentSize()
+	local size = content:getContentSize()
 	size.width = size.width + 10
 	size.height = size.height + 10
 	bg:setContentSize(size)
-	label:setPosition(cc.p(size.width/2, size.height/2))
+	content:setPosition(cc.p(size.width/2, size.height/2))
 end
 
 function Character:disappearSentence_()

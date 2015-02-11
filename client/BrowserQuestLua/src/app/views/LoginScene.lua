@@ -73,11 +73,18 @@ function LoginScene:onCreate()
             end
         end)
 
+    self:test()
     -- nameBg:setAnchorPoint(cc.p(1, 1))
     -- local nameEditBox = ccui.TextField:create("Name your character",
     --                          "fonts/graphicpixel-webfont.ttf", 24);
     -- nameEditBox:align(display.CENTER, nameBgSize.width/2, nameBgSize.height/2):addTo(nameBg)
 
+end
+
+function LoginScene:test()
+    display.newSprite("#chatbox.png")
+        :align(display.CENTER, 200, 100)
+        :addTo(self)
 end
 
 function LoginScene:shake(target)
