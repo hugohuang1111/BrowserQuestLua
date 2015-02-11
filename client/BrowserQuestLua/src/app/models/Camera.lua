@@ -89,6 +89,7 @@ function Camera:move(disX, disY, time)
 	end
 
 	if time then
+		self.map_:stopAllActions()
 		self.map_:moveTo({x = posX + disX, y = posY + disY, time = time})
 	else
 		self.map_:setPosition(posX + disX, posY + disY)

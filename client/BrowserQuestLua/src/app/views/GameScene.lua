@@ -197,10 +197,10 @@ function GameScene:showWorldChat()
 	local guiNode = self.guiNode_
 	local bgNode
 
-	bgNode = ccui.Scale9Sprite:createWithSpriteFrameName("chatbox.png")
-	local bgSize = cc.size(270, 34 * 5 + 20) -- only show last five chat
+	bgNode = ccui.Scale9Sprite:create("img/common/chatbg.png")
+	local bgSize = cc.size(150, 34 * 5 + 20) -- only show last five chat
 	bgNode:setContentSize(bgSize)
-	bgNode:align(display.LEFT_BOTTOM, 5, 34)
+	bgNode:align(display.LEFT_BOTTOM, 8, 34)
 	bgNode:addTo(guiNode)
 
 	local clip = cc.ClippingRectangleNode:create()
@@ -208,13 +208,12 @@ function GameScene:showWorldChat()
 	bgSize.width = bgSize.width - space * 2
 	bgSize.height = bgSize.height - space
 	clip:setClippingRegion(bgSize)
-	clip:align(display.LEFT_BOTTOM, 5 + space, 34)
+	clip:align(display.LEFT_BOTTOM, 8 + space, 34)
 	clip:addTo(guiNode)
 	clip:setTag(GAMESCENE_WORLD_CHAT_TAG)
 end
 
 function GameScene:addWorlChat(args)
-	dump(args, "args:")
 	local guiNode = self.guiNode_
 	local node = guiNode:getChildByTag(GAMESCENE_WORLD_CHAT_TAG)
 
