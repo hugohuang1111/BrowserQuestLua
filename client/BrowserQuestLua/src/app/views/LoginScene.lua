@@ -46,9 +46,23 @@ function LoginScene:onCreate()
     nameBg:align(display.CENTER, 120, parchmentSize.height - 100)
     nameBg:addTo(parchment)
 
-    local textfield = ccui.TextField:create("Name your character", "fonts/fzkt.ttf", 20)
+    -- local textfield = ccui.TextField:create("Name your character", "fonts/fzkt.ttf", 20)
+    --     :align(display.CENTER, nameBgSize.width/2, nameBgSize.height/2)
+    --     :addTo(nameBg)
+    local textfield = require("app/widget/TextEdit").new({placeHolder = "Name your character",
+                                                        size = nameBgSize})
         :align(display.CENTER, nameBgSize.width/2, nameBgSize.height/2)
         :addTo(nameBg)
+    textfield:onKeyBoardCreate(function(keyBoard)
+        self:addChild(keyBoard, 2)
+
+        local boundingBox = textfield:getBoundingBox()
+        local pos = textfield:convertToWorldSpace(cc.p(boundingBox.x, boundingBox.y))
+        pos = self:convertToNodeSpace(pos)
+        keyBoard:align(display.CENTER_TOP, pos.x + boundingBox.width/2, pos.y - 5)
+
+        boundingBox = keyBoard:getBoundingBox()
+    end)
 
     local playerInfo = Game:getPlayerData()
     if playerInfo then
@@ -62,6 +76,8 @@ function LoginScene:onCreate()
             if "ended" == event.name then
                 local name = textfield:getString()
                 if name and string.len(name) > 0 then
+                    self:addLoadingImg()
+
                     local playerInfo = Game:getPlayerData() or {}
                     playerInfo.nickName = name
                     Game:setPlayerData(playerInfo)
@@ -72,18 +88,17 @@ function LoginScene:onCreate()
                 end
             end
         end)
-
-    self:test()
-    -- nameBg:setAnchorPoint(cc.p(1, 1))
-    -- local nameEditBox = ccui.TextField:create("Name your character",
-    --                          "fonts/graphicpixel-webfont.ttf", 24);
-    -- nameEditBox:align(display.CENTER, nameBgSize.width/2, nameBgSize.height/2):addTo(nameBg)
-
 end
 
 function LoginScene:test()
     display.newSprite("#chatbox.png")
         :align(display.CENTER, 200, 100)
+        :addTo(self)
+end
+
+function LoginScene:addLoadingImg()
+    display.newSprite("img/common/loading.png")
+        :align(display.CENTER, display.cx, display.cy)
         :addTo(self)
 end
 

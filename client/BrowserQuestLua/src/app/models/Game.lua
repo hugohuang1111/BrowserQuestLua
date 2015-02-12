@@ -61,7 +61,7 @@ end
 
 function Game:getPlayerData()
 	if not self.gameState then
-		return
+		return {nickName = Utilitys.genRandomName()}
 	end
 
 	return self.gameState.playerInfo
@@ -110,6 +110,9 @@ function Game:netCallback(data)
 	elseif "user.entry" == action then
 		if self.user_ and body.id ~= self.user_:getId() then
 			self:createPlayer(body)
+		else
+			self.user_:setHealthPercent(body.healthPercent)
+			self.onPlayerInfoChangeFunc_(self.user_)
 		end
 	elseif "user.bye" == action then
 		local entity = self:findEntityById(body.id)
@@ -129,6 +132,12 @@ function Game:netCallback(data)
 		if deadBg then
 			deadBg:removeSelf()
 		end
+	elseif "user.info" == action then
+		local entity = self:findEntityById(body.id)
+		if self:isSelf(entity) then
+			self.user_:setHealthPercent(body.healthPercent)
+			self.onPlayerInfoChangeFunc_(entity)
+		end
 	elseif "play.move" == action then
 		if self.user_ and body.id ~= self.user_:getId() then
 			local entity = self:findEntityById(body.id)
@@ -141,7 +150,9 @@ function Game:netCallback(data)
 		end
 	elseif "play.dead" == action then
 		local entity = self:findEntityById(body.id)
-		entity:doEvent("kill")
+		if entity then
+			entity:doEvent("kill")
+		end
 	elseif "play.reborn" == action then
 		self:createEntity(body)
 	elseif "play.attack" == action then
@@ -185,6 +196,10 @@ end
 
 function Game:onPlayerMove(callback)
 	self.user_:on("move", function() callback(self.user_) end)
+end
+
+function Game:onPlayerInfoChange(callback)
+	self.onPlayerInfoChangeFunc_ = callback
 end
 
 function Game:onWorldChat(callback)

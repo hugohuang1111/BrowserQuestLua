@@ -8,6 +8,7 @@ function Play:move(args)
 	local body = msg:getBody()
 	local player = World:getPlayerById(body.id)
 	player:setPos(body.to)
+	player:healthChange(1)
 	player:save()
 
 	World:broadcast("play.move", body)

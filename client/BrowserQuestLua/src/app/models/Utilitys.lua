@@ -73,4 +73,11 @@ function Utilitys.genPathNode(path)
 	return node
 end
 
+function Utilitys.genRandomName()
+	math.randomseed(os.time())
+	local idx = math.random(100, 999)
+
+	return "Player_" .. tostring(idx)
+end
+
 return Utilitys

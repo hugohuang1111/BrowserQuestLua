@@ -47,7 +47,6 @@ function User:reborn(args)
 
 	local player = World:getPlayerById(playerInfo.id)
 	local pos = World:getRebornPos()
-	dump(pos, "reborn pos:")
 	player:setPos(pos)
 	player:resetHealth()
 	player:save()

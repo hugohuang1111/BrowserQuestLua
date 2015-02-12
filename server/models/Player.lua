@@ -8,6 +8,9 @@ function Player:ctor(...)
 	self.attributes_.armor = "clotharmor.png"
 	self.attributes_.weapon = "sword1.png"
 	self.attributes_.nickName = "unknow"
+
+	self.attributes_.healthMax = 500
+	self.attributes_.health = self.attributes_.healthMax
 end
 
 function Player:load(entityId)
@@ -44,6 +47,7 @@ function Player:getPlayerInfo()
 	playerInfo.nickName = attr.nickName
 	playerInfo.pos = attr.pos
 	playerInfo.id = tonumber(attr.id)
+	playerInfo.healthPercent = attr.health/attr.healthMax
 
 	return playerInfo
 end
@@ -75,5 +79,12 @@ end
 function Player:reborn()
 	-- Player reborn by user
 end
+
+function Player:healthChange(val)
+	Player.super.healthChange(self, val)
+
+	World:sendMsg("user.info", {id = self.attributes_.id, healthPercent = self.attributes_.health/self.attributes_.healthMax})
+end
+
 
 return Player

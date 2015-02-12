@@ -195,6 +195,14 @@ function Player:createNameLabel_()
 	label:setTag(Player.VIEW_TAG_NAME)
 end
 
+function Player:setHealthPercent(val)
+	self.healthPercent_ = val
+end
+
+function Player:getHealthPercent()
+	return self.healthPercent_
+end
+
 function Player:getInfo()
 	return {
 		imageName = self.imageName_,

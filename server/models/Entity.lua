@@ -151,8 +151,6 @@ function Entity:healthChange(val)
 		self:reborn()
 	end
 
-	printf("Entity healthChange:%d id:%d", self.attributes_.health, self.attributes_.id)
-
 	redis:command("HSET", self.attributes_.id, "health", self.attributes_.health)
 
 	return afterHealth

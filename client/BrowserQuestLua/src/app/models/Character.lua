@@ -319,6 +319,7 @@ function Character:attack(entity)
 	self.attackEntity_ = entity or self.attackEntity_
 
 	if not self.attackEntity_ then
+		printInfo("id %d attackentity is nil", self.id)
 		return
 	end
 

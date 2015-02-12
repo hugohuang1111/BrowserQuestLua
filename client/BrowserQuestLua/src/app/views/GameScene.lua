@@ -33,8 +33,18 @@ function GameScene:createUI()
     local size = bottomBg:getContentSize()
     bottomBg:setContentSize(cc.size(display.width, size.height))
 
-    local blood = display.newSprite("#healthbar.png")
-    	:align(display.LEFT_BOTTOM, 3, 4)
+	local bloodFg = display.newSprite("#healthbar.png")
+	local bloodSize = bloodFg:getContentSize()
+	bloodSize.width = bloodSize.width - 12
+	bloodSize.height = bloodSize.height - 6
+    local blood = ccui.Scale9Sprite:create("img/common/blood.png")
+    	:align(display.LEFT_BOTTOM, 3 + 6, 4 + 3)
+    	:addTo(bottom)
+    blood:setContentSize(bloodSize)
+    self.bloodSize_ = bloodSize
+    self.blood_ = blood
+
+    bloodFg:align(display.LEFT_BOTTOM, 3, 4)
     	:addTo(bottom)
 
     local chatBtn = display.newSprite("#chatbtn.png")
@@ -78,6 +88,7 @@ function GameScene:createMap()
 
 	Game:onPlayerUIExit(handler(self, self.showRevive))
 	Game:onPlayerMove(handler(self, self.playerMoveHandler))
+	Game:onPlayerInfoChange(handler(self, self.playerInfoHandler))
 	Game:onWorldChat(handler(self, self.addWorlChat))
 
 	Game:createEntitys()
@@ -144,6 +155,16 @@ function GameScene:playerMoveHandler(user)
 	end
 end
 
+function GameScene:playerInfoHandler(user)
+	local healthPercent = user:getHealthPercent()
+	if not healthPercent or healthPercent < 0 then
+		return
+	end
+	local size = clone(self.bloodSize_)
+	size.width = size.width * healthPercent
+    self.blood_:setContentSize(size)
+end
+
 function GameScene:showEmojiTable()
 	local guiNode = self.guiNode_
 	local node
@@ -198,7 +219,7 @@ function GameScene:showWorldChat()
 	local bgNode
 
 	bgNode = ccui.Scale9Sprite:create("img/common/chatbg.png")
-	local bgSize = cc.size(150, 34 * 5 + 20) -- only show last five chat
+	local bgSize = cc.size(250, 34 * 5 + 20) -- only show last five chat
 	bgNode:setContentSize(bgSize)
 	bgNode:align(display.LEFT_BOTTOM, 8, 34)
 	bgNode:addTo(guiNode)

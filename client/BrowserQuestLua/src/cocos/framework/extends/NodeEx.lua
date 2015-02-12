@@ -120,6 +120,37 @@ function Node:scaleTo(args)
     return self
 end
 
+local isVisibleFun = Node.isVisible
+function Node:isVisible()
+    local cur = self
+
+    while true do
+        if not cur then
+            return true
+        end
+
+        if not isVisibleFun(cur) then
+            return false
+        end
+        cur = cur:getParent()
+    end
+end
+
+function Node:containWorldPoint(point)
+    if not self:isVisible() then
+        return false
+    end
+    local localPos = self:convertToNodeSpace(point)
+    local rect = self:getContentSize()
+    rect.x = 0
+    rect.y = 0
+    if cc.rectContainsPoint(rect, localPos) then
+        return true
+    end
+    
+    return false
+end
+
 function Node:onClick(callback)
     local listener = cc.EventListenerTouchOneByOne:create()
     listener:setSwallowTouches(true)
