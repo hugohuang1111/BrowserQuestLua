@@ -53,8 +53,8 @@ function Entity:load(entityId)
 	vals = self:transRedisNull(vals)
 	local attr = self.attributes_
 	attr.pos = cc.p(tonumber(vals[1] or 0), tonumber(vals[2] or 0))
-	attr.health = tonumber(vals[3])
-	attr.healthMax = tonumber(vals[4])
+	attr.health = tonumber(vals[3]) or attr.health
+	attr.healthMax = tonumber(vals[4]) or attr.healthMax
 	attr.type = tonumber(vals[5])
 
 	return true

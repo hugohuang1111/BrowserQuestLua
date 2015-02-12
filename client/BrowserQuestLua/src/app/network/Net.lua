@@ -150,7 +150,7 @@ function Net:operCmd_()
 end
 
 function Net:sendReal_(data)
-	printInfo("NET send real data:%s", data)
+	-- printInfo("NET send real data:%s", data)
 	self.ws_:sendString(data)
 end
 

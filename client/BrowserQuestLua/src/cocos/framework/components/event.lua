@@ -74,7 +74,9 @@ function Event:dispatchEvent(event)
         -- listener[1] = listener
         -- listener[2] = tag
         event.tag = listener[2]
-        listener[1](event)
+        if listener[1](event) then
+            self.listeners_[eventName][handle] = nil
+        end
         if event.stop_ then
             if DEBUG > 1 then
                 printInfo("%s [Event] dispatchEvent() - break dispatching for event %s", tostring(self.target_), eventName)

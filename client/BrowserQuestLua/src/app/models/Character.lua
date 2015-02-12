@@ -76,6 +76,7 @@ function Character:fllow(entity)
 	self.fllowEntity_ = entity or self.fllowEntity_
 
 	if not self.fllowEntity_ then
+		printInfo("id %d fllow nil", self.id)
 		return
 	end
 
@@ -88,6 +89,7 @@ function Character:fllow(entity)
 	self.fllowEntity_:on("exit",
 		function()
 			self.fllowEntity_ = nil
+			return true
 		end)
 end
 
@@ -200,12 +202,14 @@ end
 function Character:onWalkStepComplete_()
 	self.isWalking_ = false
 
+	printInfo("id %d path count:%d", self.id, #self.path_)
 	if 0 == #self.path_ then
 		if self.onPathingFinish_ then
 			self.onPathingFinish_()
 		end
 		self:doEvent("stop")
 	else
+		printInfo("id %d fllow:%s", self.id, tostring(self.fllowEntity_))
 		if self.fllowEntity_ then
 			local dis = self:distanceWith(self.fllowEntity_)
 			if dis > 1 then
@@ -213,6 +217,8 @@ function Character:onWalkStepComplete_()
 			elseif 1 == dis then
 				self:doEvent("stop")
 				self:lookAt(self.fllowEntity_)
+				printInfo("id %d fllow %s attack %s",
+					self.id, tostring(self.fllowEntity_), tostring(self.attackEntity_))
 				if self.attackEntity_ then
 					self:attack()
 				elseif self.talkEntity_ then
@@ -309,6 +315,7 @@ end
 
 function Character:attackIf(entity)
 	if not entity or self.attackEntity_ == entity then
+		printInfo("id %d attackif %s", self.id, tostring(entity))
 		return
 	end
 	self:attack(entity)

@@ -100,7 +100,7 @@ function Game:netCallback(data)
 
 	local body = msg:getBody()
 	local action = msg:getAction()
-	printInfo("Game:netCallback action:%s", action)
+	-- printInfo("Game:netCallback action:%s", action)
 	if "user.welcome" == action then
 		self.gameState.playerInfo = body.playerInfo
 		self.gameInfo_.entitysStatic = body.entitysStatic
