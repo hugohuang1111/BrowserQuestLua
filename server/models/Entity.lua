@@ -1,6 +1,7 @@
 
 local Types = import(".Types")
 local Entity = class("Entity")
+local Orientation = import(".Orientation")
 
 for k,v in pairs(Types) do
 	Entity[k] = v
@@ -19,6 +20,7 @@ function Entity:ctor(attribute)
 		self.attributes_.type = Types.TYPE_NONE
 		self.attributes_.pos = cc.p(0, 0)
 		self.attributes_.roamingArea = cc.rect(0, 0, 0, 0)
+		self.attributes_.orientation = Orientation.DOWN
 	end
 end
 

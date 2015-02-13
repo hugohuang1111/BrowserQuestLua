@@ -6,10 +6,13 @@ local Play = class("Play")
 function Play:move(args)
 	local msg = NetMsg.parser(args)
 	local body = msg:getBody()
-	local player = World:getPlayerById(body.id)
-	player:setPos(body.to)
-	player:healthChange(1)
-	player:save()
+	local entity = World:getEntity(body.id)
+	entity:setPos(body.to)
+	if entity.getPlayerInfo then
+		-- entity is player instance
+		entity:healthChange(1)
+	end
+	entity:save()
 
 	World:broadcast("play.move", body)
 end
