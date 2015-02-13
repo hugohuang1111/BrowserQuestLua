@@ -89,6 +89,7 @@ function Entity:onAfterEvent(event)
 	elseif "walk" == event.to then
 		self:playWalk(self.orientation_)
 	elseif "death" == event.to then
+		self:dispatchEvent({name = "death"})
 		self:play("death",
 			{
 				removeSelf = true,

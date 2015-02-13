@@ -30,9 +30,17 @@ function Event:unbind(target)
     self:init_()
 end
 
-function Event:on(eventName, listener, tag)
+function Event:on(eventName, listener, tag, once)
     assert(type(eventName) == "string" and eventName ~= "",
         "Event:addEventListener() - invalid eventName")
+    if once and self:hasEventListener(eventName, tag) then
+        if DEBUG > 1 then
+            printInfo("%s [Event] addEventListener() - event: %s, handle: %s, tag: \"%s\" exist",
+                      tostring(self.target_), eventName, handle, tostring(tag))
+        end
+        return
+    end
+
     eventName = string.upper(eventName)
     if self.listeners_[eventName] == nil then
         self.listeners_[eventName] = {}
@@ -137,11 +145,20 @@ function Event:removeAllEventListeners()
     return self.target_
 end
 
-function Event:hasEventListener(eventName)
+function Event:hasEventListener(eventName, tag)
     eventName = string.upper(tostring(eventName))
     local t = self.listeners_[eventName]
-    for _, __ in pairs(t) do
-        return true
+    if not t then
+        return false
+    end
+    for _, listener in pairs(t) do
+        -- listener[1] = listener
+        -- listener[2] = tag
+        if not tag then
+            return true
+        elseif listener[2] == tag then
+            return true
+        end
     end
     return false
 end

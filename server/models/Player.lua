@@ -84,6 +84,8 @@ function Player:healthChange(val)
 	Player.super.healthChange(self, val)
 
 	World:sendMsg("user.info", {id = self.attributes_.id, healthPercent = self.attributes_.health/self.attributes_.healthMax})
+
+	dump(self.attributes_, "attributes_:")
 end
 
 

@@ -21,6 +21,7 @@ function User:welcome(args)
 	local onLine = World:getOnlinePlayer()
 
 	local player = World:getPlayerEntity(playerInfo.nickName, playerInfo.id)
+	player:resetHealth()
 
 	playerInfo = player:getPlayerInfo()
 

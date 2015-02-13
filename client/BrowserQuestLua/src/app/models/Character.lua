@@ -25,6 +25,7 @@ function Character:ctor(args)
 	
 	self.orientation_ = Orientation.DOWN
 	self.path_ = {}
+	self.fllowHandler_ = {}
 	self.sentences_ = args.sentences or {"hi, welcome to browser quest! -- from Quick Team"}
 	self.showSentenceIdx_ = 1
 	Character.super.ctor(self, args)
@@ -86,11 +87,37 @@ function Character:fllow(entity)
 		self:walkPath(path)
 	end
 
+
+	self.fllowEntity_:on("death",
+		function()
+			self:cancelFllow()
+			printInfo("Character fllow is death %d", self.id)
+			self:doEvent("stop")
+			return true
+		end, self.id, true)
+	self.fllowEntity_:on("move",
+		function()
+			if not Game:isSelf(self) and self:distanceWith(self.fllowEntity_) > 10 then
+				self:cancelFllow()
+			else
+				local pos = self.fllowEntity_:getMapPos()
+				local path = Game:findPath(pos, self.curPos_)
+				self:walkPath(path)
+			end
+		end, self.id, true)
 	self.fllowEntity_:on("exit",
 		function()
-			self.fllowEntity_ = nil
+			self:cancelFllow()
 			return true
-		end)
+		end, self.id, true)
+end
+
+function Character:cancelFllow()
+	if not self.fllowEntity_ then
+		return
+	end
+	self.fllowEntity_:removeEventListenersByTag(self.id)
+	self.fllowEntity_ = nil
 end
 
 function Character:lookAt(entity)
@@ -204,9 +231,6 @@ function Character:onWalkStepComplete_()
 
 	printInfo("id %d path count:%d", self.id, #self.path_)
 	if 0 == #self.path_ then
-		if self.onPathingFinish_ then
-			self.onPathingFinish_()
-		end
 		self:doEvent("stop")
 	else
 		printInfo("id %d fllow:%s", self.id, tostring(self.fllowEntity_))
@@ -231,11 +255,6 @@ function Character:onWalkStepComplete_()
 			self:walkTo(table.remove(self.path_, 1))
 		end
 	end
-end
-
-function Character:onPathingFinish(callback)
-	self.onPathingFinish_ = self.onPathingFinish_ or {}
-	self.onPathingFinish_ = callback
 end
 
 function Character:playWalk(orientation)
@@ -274,7 +293,11 @@ function Character:playAtk(orientation)
 			handler = cc.Director:getInstance():getScheduler():scheduleScriptFunc(function()
 				cc.Director:getInstance():getScheduler():unscheduleScriptEntry(handler)
 				self.isCoolDown = false
-				self:attack()
+				if self.fllowEntity_ then
+					-- attack must be have fllowentity
+					-- fllowentity is nil, needn't attack again
+					self:attack()
+				end
 			end, self.COOL_DOWN_TIME, false)
 		end}
 	local orientation = orientation or self.orientation_
@@ -304,6 +327,7 @@ function Character:playDeath()
 			Game:removeEntity(self)
 		end}
 	self:play("death", args)
+	self:cancelFllow()
 end
 
 function Character:distanceWith(entity)
@@ -331,6 +355,7 @@ function Character:attack(entity)
 	end
 
 	if 1 == self:distanceWith(self.attackEntity_) then
+		printInfo("Character attack entity %d, %d", self.id, self.attackEntity_.id)
 		if not self.isCoolDown then
 			self:doEvent("attack", Utilitys.getOrientation(self.curPos_, self.attackEntity_:getMapPos()))
 		else

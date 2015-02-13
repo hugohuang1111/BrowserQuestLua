@@ -46,6 +46,7 @@ function World:initMapIf()
 			local p = map:getPosByTileIdx(idx)
 			local entity = Entity.new()
 			entity:setPos(p)
+			entity:setRoamingArea(cc.rect(p.x, p.y, 1, 1))
 			entity:setRedis(redis)
 			entity:setId(idCounter)
 			entity:setHealth(100)
@@ -57,6 +58,28 @@ function World:initMapIf()
 
 			redis:command("SADD", _REDIS_KEY_SETS_ENTITY_STATIC_, entity:getId())
 		end
+
+		-- generate roaming mobs
+		-- local roamingArea = map:getRoamingArea()
+		-- for i,area in ipairs(roamingArea) do
+		-- 	local rect = cc.rect(area.x, area.y, area.width, area.height)
+		-- 	for i=1, area.nb do
+		-- 		local entity = Entity.new()
+		-- 		entity:setRoamingArea(rect)
+		-- 		entity:setRandomPos()
+		-- 		entity:setRedis(redis)
+		-- 		entity:setId(idCounter)
+		-- 		entity:setHealth(100)
+		-- 		entity:setName(area.type)
+
+		-- 		idCounter = idCounter + 1
+
+		-- 		entity:save()
+		-- 		entitys[#entitys + 1] = entity
+
+		-- 		redis:command("SADD", _REDIS_KEY_SETS_ENTITY_STATIC_, entity:getId())
+		-- 	end
+		-- end
 
 		redis:command("SET", _MAP_LOAD_, "yes")
 	else
@@ -134,6 +157,8 @@ function World:getPlayerEntity(name, id)
 	local attr
 	if id then
 		entity:load(id)
+		entity:setNickName(name)
+		entity:save()
 	else
 		entity:setArmor("clotharmor.png")
 		entity:setWeapon("sword1.png")
