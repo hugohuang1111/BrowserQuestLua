@@ -107,6 +107,10 @@ function NetMsg:getAction()
 	return self.data_.action
 end
 
+function NetMsg:getSession()
+	return self.data_.session
+end
+
 function NetMsg:setBody(body)
 	self.data_.body = body
 end

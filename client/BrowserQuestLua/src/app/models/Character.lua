@@ -40,11 +40,13 @@ function Character:doEvent(eventName, orientation)
 end
 
 function Character:onAfterEvent(event)
+	printInfo("Character state:" .. event.to)
 	local bHandler = true
 
 	if "walk" == event.to then
 		self:playWalk(self.orientation_)
 	elseif "idle" == event.to then
+		-- self:sendInfoToServer()
 		self:playIdle()
 	elseif "atk" == event.to then
 		self:playAtk()
@@ -67,10 +69,31 @@ function Character:setWalkSpeed(speed)
 	self.walkSpeed_ = speed
 end
 
+function Character:sendInfoToServer()
+	if 0 == self.id then
+		return
+	end
+
+	Game:sendCmd("user.info",
+		{id = self.id,
+		pos = self.curPos_,
+		orientation = self.orientation_})
+end
+
 function Character:walk(pos)
 	local path = Game:findPath(pos, self.curPos_)
 	self:walkPath(path)
 	self.fllowEntity_ = nil
+end
+
+function Character:walkToPosReq(destPos, origPos)
+	Game:sendCmd("play.move", {id = self.id, from = origPos, to = destPos})
+end
+
+function Character:walkToPos(destPos, origPos)
+	self:setMapPos(origPos)
+	local path = Game:findPath(destPos, self.curPos_)
+	self:walkPath(path)
 end
 
 function Character:fllow(entity)
@@ -83,8 +106,9 @@ function Character:fllow(entity)
 
 	if self:distanceWith(self.fllowEntity_) > 1 then
 		local pos = self.fllowEntity_:getMapPos()
-		local path = Game:findPath(pos, self.curPos_)
-		self:walkPath(path)
+		-- local path = Game:findPath(pos, self.curPos_)
+		-- self:walkPath(path)
+		self:walkToPosReq(pos)
 	end
 
 
@@ -97,6 +121,9 @@ function Character:fllow(entity)
 		end, self.id, true)
 	self.fllowEntity_:on("move",
 		function()
+			if not self.fllowEntity_ then
+				return true
+			end
 			if not Game:isSelf(self) and self:distanceWith(self.fllowEntity_) > 10 then
 				self:cancelFllow()
 			else
@@ -107,6 +134,7 @@ function Character:fllow(entity)
 		end, self.id, true)
 	self.fllowEntity_:on("exit",
 		function()
+			printInfo("Character fllow is exit %d", self.id)
 			self:cancelFllow()
 			return true
 		end, self.id, true)
@@ -145,9 +173,6 @@ function Character:getStateByOrientation(state)
 
 	return newState
 end
-
-
-
 
 function Character:walkTo(pos)
 	if not pos then
@@ -221,7 +246,7 @@ function Character:walkStep(dir, step)
 	self:doEvent("move", dir)
 
 	if Game:isSelf(self) then
-		Game:sendCmd("play.move", {id = self.id, from = origin, to = destination})
+		-- Game:sendCmd("play.move", {id = self.id, from = origin, to = destination})
 		self:dispatchEvent({name = "move"})
 	end
 end
@@ -297,6 +322,8 @@ function Character:playAtk(orientation)
 					-- attack must be have fllowentity
 					-- fllowentity is nil, needn't attack again
 					self:attack()
+				else
+					self:playIdle()
 				end
 			end, self.COOL_DOWN_TIME, false)
 		end}
@@ -311,7 +338,7 @@ function Character:playAtk(orientation)
 		self:play("atk_right", args)
 	end
 
-	Game:sendCmd("play.attack", {sender = self.id, target = self.attackEntity_:getId()})
+	-- Game:sendCmd("play.attack", {sender = self.id, target = self.attackEntity_:getId()})
 end
 
 function Character:stopAtk()
@@ -324,6 +351,7 @@ function Character:playDeath()
 	local args = {
 		isOnce = true,
 		onComplete = function()
+			printInfo("Character play death %d", self.id)
 			Game:removeEntity(self)
 		end}
 	self:play("death", args)
@@ -345,6 +373,20 @@ function Character:attackIf(entity)
 	self:attack(entity)
 end
 
+function Character:attackMoveReq(entity)
+	Game:sendCmd("play.attackMove", {sender = self.id, target = entity:getId()})
+end
+
+function Character:attackReq()
+	local senderId = self.id
+	local targetId = self.attackEntity_:getId()
+	local userId = Game:getUser():getId()
+
+	if userId == senderId or userId == targetId then
+		Game:sendCmd("play.attack", {sender = senderId, target = targetId})
+	end
+end
+
 function Character:attack(entity)
 	self:fllow(entity)
 	self.attackEntity_ = entity or self.attackEntity_
@@ -357,7 +399,7 @@ function Character:attack(entity)
 	if 1 == self:distanceWith(self.attackEntity_) then
 		printInfo("Character attack entity %d, %d", self.id, self.attackEntity_.id)
 		if not self.isCoolDown then
-			self:doEvent("attack", Utilitys.getOrientation(self.curPos_, self.attackEntity_:getMapPos()))
+			self:attackReq()
 		else
 			print("Character:attack in cool down time")
 		end
@@ -448,6 +490,7 @@ function Character:getBubble_()
 end
 
 function Character:showReduceHealth(val)
+	printInfo("Character showReduceHealth")
 	local ttfConfig = {
 		fontFilePath = "fonts/arial.ttf",
 		fontSize = 24
@@ -466,10 +509,11 @@ function Character:showReduceHealth(val)
 
 	-- remove label after time + 1
 	local schedule = cc.Director:getInstance():getScheduler()
-	local handle
 	label.handle = schedule:scheduleScriptFunc(function()
-		schedule:unscheduleScriptEntry(label.handle)
-		label.handle = nil
+		if label.handle then
+			schedule:unscheduleScriptEntry(label.handle)
+			label.handle = nil
+		end
 		label:removeSelf()
 	end, time + 1, false)
 

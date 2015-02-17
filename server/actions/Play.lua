@@ -29,7 +29,14 @@ function Play:attack(args)
 	body.healthChange = reduceBoold
 	body.dead = (afterboold <= 0)
 
-	return msg:getData()
+	World:broadcast("play.attack", body)
+end
+
+function Play:attackmove(args)
+	local msg = NetMsg.parser(args)
+	local body = msg:getBody()
+
+	World:broadcast("play.attackMove", body)
 end
 
 function Play:chat(args)

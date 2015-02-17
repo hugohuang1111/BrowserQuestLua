@@ -57,4 +57,20 @@ function User:reborn(args)
 	return msg:getData()
 end
 
+function User:info(args)
+	local msg = NetMsg.parser(args)
+	local body = msg:getBody()
+	local entity = World:getEntity(body.id)
+	if not entity then
+		return
+	end
+	if body.pos then
+		entity:setPos(body.pos)
+	end
+	if body.orientation then
+		entity:setOrientation(body.orientation)
+	end
+	entity:save()
+end
+
 return User

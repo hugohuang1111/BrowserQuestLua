@@ -300,10 +300,17 @@ function GameScene:onTouchEnded(touch, event)
 	local entitys = Game:findEntityByPos(mapPos)
 	local entity = entitys[1]
 
+	-- if self.istest then
+	-- 	Game:getUser():playIdle()		
+	-- else
+	-- 	Game:getUser():playAtk()
+	-- 	self.istest = true
+	-- end
+
 	if entity then
 		local entityType = entity:getType()
 		if entity.TYPE_MOBS_BEGIN < entityType and entityType < entity.TYPE_MOBS_END then
-			Game:getUser():attack(entity)
+			Game:getUser():attackMoveReq(entity)
 		elseif entity.TYPE_NPCS_BEGIN < entityType and entityType < entity.TYPE_NPCS_END then
 			Game:getUser():talk(entity)
 		elseif (entity.TYPE_ARMORS_BEGIN < entityType and entityType < entity.TYPE_ARMORS_END)
@@ -312,7 +319,13 @@ function GameScene:onTouchEnded(touch, event)
 			-- Game:getUser():changeWeapon("axe.png")
 		end
 	else
-		Game:getUser():walk(mapPos)
+
+		-- local entity = Game:findEntityById(1011)
+		-- if entity then
+		-- 	entity:doEvent("kill")
+		-- end
+
+		Game:getUser():walkToPosReq(mapPos)
 		-- local drawNode = Utilitys.genPathNode(path)
 		-- Game:getMap():removeChildByTag(111)
 		-- Game:getMap():addChild(drawNode, 100, 111)

@@ -119,6 +119,8 @@ end
 function Entity:doEvent(eventName)
 	if self.fsm_:canDoEvent(eventName) then
 		self.fsm_:doEvent(eventName)
+	else
+		printError("Entity can't do event:" .. eventName)
 	end
 end
 
@@ -155,6 +157,7 @@ function Entity:getType()
 end
 
 function Entity:play(actionName, args)
+	printInfo("Entity play actionName:%s", actionName)
 	local result = self:getFrames_(actionName)
 	local frames = result.frames
 	if not frames then
@@ -198,6 +201,9 @@ function Entity:walk(pos)
 end
 
 function Entity:setMapPos(pos)
+	if not pos then
+		return
+	end
 	self.curPos_ = pos
 	self.view_:setPosition(Utilitys.pos2px(pos))
 end

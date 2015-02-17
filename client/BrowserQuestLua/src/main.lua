@@ -19,6 +19,13 @@ require "cocos.cocos2d.json"
 -- websocket
 require "cocos.network.NetworkConstants"
 
+
+
+device.writablePath =
+	io.pathinfo(cc.FileUtils:getInstance():fullPathForFilename("browserquest.dat")).dirname
+printInfo("device.writablePath 1:" .. device.writablePath)
+
+
 local function main()
     require("app.MyApp"):create():run("LoginScene")
 end

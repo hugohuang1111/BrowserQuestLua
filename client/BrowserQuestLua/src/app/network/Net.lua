@@ -27,7 +27,7 @@ end
 
 function Net:connect(addr, protocol)
 	local addr = "ws://" .. self.addr_ .. "/socket"
-	local ws = cc.WebSocket:createByAProtocol(addr, self.protocol_)
+	local ws = cc.WebSocket:createByAProtocol(addr, protocol)
 
 	ws:registerScriptHandler(handler(self, self.wsOpen), cc.WEBSOCKET_OPEN)
     ws:registerScriptHandler(handler(self, self.wsMessage), cc.WEBSOCKET_MESSAGE)
@@ -100,6 +100,10 @@ function Net:setAddr(addr)
 	self.addr_ = addr
 end
 
+function Net:getSessionId()
+	return self.sessionId_
+end
+
 function Net:send(args)
 	self:sendCmd(Net.CMD_SEND, args)
 end
@@ -108,7 +112,12 @@ function Net:sendCmd(cmd, args)
 	local d = {cmd = cmd, data = args}
 	table.insert(self.sendCmds_, d)
 
-	self:operCmd_()
+	local scheduler = cc.Director:getInstance():getScheduler()
+	local handler
+	handler = scheduler:scheduleScriptFunc(function()
+		scheduler:unscheduleScriptEntry(handler)
+		self:operCmd_()
+	end, 0.01, false)
 end
 
 function Net:operCmd_()
@@ -144,13 +153,15 @@ function Net:operCmd_()
 			elseif cc.WEBSOCKET_STATE_OPEN == self.ws_:getReadyState() then
 				self:sendReal_(cmd.data)
 				table.remove(self.sendCmds_, 1)
+			else
+				printInfo("Net operCmd error")
 			end
 		end
 	end
 end
 
 function Net:sendReal_(data)
-	-- printInfo("NET send real data:%s", data)
+	printInfo("NET send real data:%s", data)
 	self.ws_:sendString(data)
 end
 

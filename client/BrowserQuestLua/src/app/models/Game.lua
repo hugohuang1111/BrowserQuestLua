@@ -139,32 +139,56 @@ function Game:netCallback(data)
 			self.onPlayerInfoChangeFunc_(entity)
 		end
 	elseif "play.move" == action then
-		if self.user_ and body.id ~= self.user_:getId() then
-			local entity = self:findEntityById(body.id)
-			printInfo("enity %s", tostring(entity))
-			if entity then
-				entity:doEvent("stop")
-				entity:setMapPos(body.from)
-				entity:walk(body.to)
-			end
-		end
+		-- if not self:isSelfCmd(msg) then
+			-- if self.user_ and body.id ~= self.user_:getId() then
+				local entity = self:findEntityById(body.id)
+				printInfo("enity %s", tostring(entity))
+				if entity then
+					entity:doEvent("stop")
+					entity:walkToPos(body.to, body.from)
+				end
+			-- end
+		-- end
 	elseif "play.dead" == action then
 		local entity = self:findEntityById(body.id)
+		printInfo("play entity %s user %s", tostring(entity), tostring(self.user_))
+		-- self:removeEntity(entity)
+		-- if entity.fllowEntity_ then
+		-- 	entity.fllowEntity_.fllowEntity_ = nil
+		-- end
+		-- entity.fllowEntity_ = nil
+
 		if entity then
 			entity:doEvent("kill")
 		end
 	elseif "play.reborn" == action then
 		self:createEntity(body)
-	elseif "play.attack" == action then
+	elseif "play.attackMove" == action then
 		local target = self:findEntityById(body.target)
 		local sender = self:findEntityById(body.sender)
 
+		printInfo("Game attack entity sender:%d, target:%d", sender:getId(), target:getId())
+
+		sender:attack(target)
+	elseif "play.attack" == action then
+		local target = self:findEntityById(body.target)
+		local sender = self:findEntityById(body.sender)
+		local userId = self.user_:getId()
+
+		if body.dead then
+			return
+		end
+
 		if target then
-			target:showReduceHealth(body.healthChange)
+			if body.target == userId or body.sender == userId then
+				target:showReduceHealth(body.healthChange)
+			end
 			target:attackIf(sender)
 		end
-		if body.dead then
-			sender:stopAtk()
+
+		if sender then
+			sender:doEvent("attack",
+				Utilitys.getOrientation(sender:getMapPos(), sender.attackEntity_:getMapPos()))
 		end
 	elseif "play.chat" == action then
 		local player = self:findEntityById(body.id)
@@ -185,7 +209,12 @@ function Game:sendCmd(action, data)
 end
 
 function Game:send(data)
+	data.session = self.net_:getSessionId()
 	self.net_:send(json.encode(data))
+end
+
+function Game:isSelfCmd(netMsg)
+	return self.net_:getSessionId() == netMsg:getSession()
 end
 
 --[[ DATA NETWORK PART END ]]
@@ -344,7 +373,8 @@ function Game:addEntity(entity)
 end
 
 function Game:removeEntity(entity)
-	entity:getView():removeFromParent()
+	printInfo("remove entity id:%d, type:%d", entity.id, entity.type_)
+	entity:getView():removeSelf()
 	self.entitys_[entity:getIdx()] = nil
 end
 

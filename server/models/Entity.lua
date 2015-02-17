@@ -102,6 +102,10 @@ function Entity:setName(name)
 	self:setType(Types[t])
 end
 
+function Entity:setOrientation(orientation)
+	self.attributes_.orientation = orientation
+end
+
 function Entity:setType(type)
 	self.attributes_.type = type
 end
