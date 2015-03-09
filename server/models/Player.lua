@@ -14,7 +14,7 @@ function Player:ctor(...)
 end
 
 function Player:load(entityId)
-	local ok = Player.super.load(self, entityId)
+	local ok = Entity.load(self, entityId)
 
 	if not ok then
 		return false
@@ -27,6 +27,8 @@ function Player:load(entityId)
 	attr.weapon = vals[2]
 	attr.nickName = vals[3]
 	attr.id = entityId
+
+	return true
 end
 
 function Player:save()

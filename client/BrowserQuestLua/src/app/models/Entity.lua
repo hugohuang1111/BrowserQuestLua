@@ -83,26 +83,14 @@ function Entity:onBeforeEvent(event)
 end
 
 function Entity:onAfterEvent(event)
-	local isHandle = true
+	printInfo("Entity:onAfterEvent state:" .. event.to)
+
 	if "idle" == event.to then
-		self:play("idle")
-	elseif "walk" == event.to then
-		self:playWalk(self.orientation_)
+		self:playIdle(self.orientation_)
 	elseif "death" == event.to then
 		self:dispatchEvent({name = "death"})
-		self:play("death",
-			{
-				removeSelf = true,
-				onComplete = function()
-					Game:removeEntity(self)
-				end,
-				isOnce = true
-			})
-	else
-		isHandle = false
+		self:playDeath()
 	end
-
-	return isHandle
 end
 
 function Entity:onEnterState(event)
@@ -174,6 +162,21 @@ function Entity:play(actionName, args)
 	else
 		sp:playAnimationForever(display.newAnimation(frames, self:getAnimationTime(actionName)), args)
 	end
+end
+
+function Entity:playIdle()
+	self:play("idle")
+end
+
+function Entity:playDeath()
+	self:play("death",
+		{
+			removeSelf = true,
+			onComplete = function()
+				Game:removeEntity(self)
+			end,
+			isOnce = true
+		})
 end
 
 function Entity:getAnimationTime(actionName)

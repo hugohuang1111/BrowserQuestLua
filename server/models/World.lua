@@ -153,32 +153,39 @@ function World:getPlayerInfo(name, id)
 end
 
 function World:getPlayerEntity(name, id)
-	local entity = Player.new()
+	local entity
 	local attr
-	if id then
-		entity:load(id)
-		entity:setNickName(name)
-		entity:save()
-	else
-		entity:setArmor("clotharmor.png")
-		entity:setWeapon("sword1.png")
-		if string.len(name) > 10 then
-			playerInfo.nickName = string.sub(name, 1, 10)
-		end
-		entity:setNickName(name)
-		math.randomseed(os.time())
-		entity:setPos(cc.p(math.random(35, 45), math.random(223, 234)))
-
-		local idCounter
-		idCounter = self.redis_:command("INCR", _REDIS_KEY_ID_COUNTER_)
-		if 1 == idCounter then
-			self.redis_:command("SET", _REDIS_KEY_ID_COUNTER_, IDCounterBegin)
-			idCounter = IDCounterBegin
-		end
-		entity:setId(idCounter)
-
-		entity:save()
+	if string.len(name) > 10 then
+		name = string.sub(name, 1, 10)
 	end
+	if id then
+		entity = Player.new()
+		if not entity:load(id) then
+			entity = self:newPlayer()
+		end
+	else
+		entity = self:newPlayer()
+	end
+	entity:setNickName(name)
+	entity:save()
+
+	return entity
+end
+
+function World:newPlayer()
+	local entity = Player.new()
+	entity:setArmor("clotharmor.png")
+	entity:setWeapon("sword1.png")
+	math.randomseed(os.time())
+	entity:setPos(cc.p(math.random(35, 45), math.random(223, 234)))
+
+	local idCounter
+	idCounter = self.redis_:command("INCR", _REDIS_KEY_ID_COUNTER_)
+	if 1 == idCounter then
+		self.redis_:command("SET", _REDIS_KEY_ID_COUNTER_, IDCounterBegin)
+		idCounter = IDCounterBegin
+	end
+	entity:setId(idCounter)
 
 	return entity
 end

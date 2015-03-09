@@ -145,6 +145,7 @@ function Game:netCallback(data)
 				printInfo("enity %s", tostring(entity))
 				if entity then
 					entity:doEvent("stop")
+					entity:cancelAttackReq()
 					entity:walkToPos(body.to, body.from)
 				end
 			-- end

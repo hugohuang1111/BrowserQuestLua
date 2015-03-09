@@ -3,9 +3,10 @@ local Entity = import(".Entity")
 local Orientation = import(".Orientation")
 local Utilitys = import(".Utilitys")
 local Character = class("Character", Entity)
+local Schedule = cc.Director:getInstance():getScheduler()
 
 Character.MOVE_STEP_TIME = 0.3
-Character.COOL_DOWN_TIME = 0.3
+Character.COOL_DOWN_TIME = Character.ANIMATION_ATK_TIME * 4 + 0.3
 
 Character.PATH_FINISH = "pathingFinish"
 
@@ -40,24 +41,12 @@ function Character:doEvent(eventName, orientation)
 end
 
 function Character:onAfterEvent(event)
-	printInfo("Character state:" .. event.to)
-	local bHandler = true
+	Entity.onAfterEvent(self, event)
 
 	if "walk" == event.to then
 		self:playWalk(self.orientation_)
-	elseif "idle" == event.to then
-		-- self:sendInfoToServer()
-		self:playIdle()
 	elseif "atk" == event.to then
 		self:playAtk()
-	elseif "death" == event.to then
-		self:playDeath()
-	else
-		bHandler = false
-	end
-
-	if not bHandler then
-		Character.super.onAfterEvent(self, event)
 	end
 end
 
@@ -91,6 +80,8 @@ function Character:walkToPosReq(destPos, origPos)
 end
 
 function Character:walkToPos(destPos, origPos)
+	dump(destPos, "Character walkToPos dest:")
+	dump(origPos, "Character walkToPos orig:")
 	self:setMapPos(origPos)
 	local path = Game:findPath(destPos, self.curPos_)
 	self:walkPath(path)
@@ -104,14 +95,6 @@ function Character:fllow(entity)
 		return
 	end
 
-	if self:distanceWith(self.fllowEntity_) > 1 then
-		local pos = self.fllowEntity_:getMapPos()
-		-- local path = Game:findPath(pos, self.curPos_)
-		-- self:walkPath(path)
-		self:walkToPosReq(pos)
-	end
-
-
 	self.fllowEntity_:on("death",
 		function()
 			self:cancelFllow()
@@ -119,28 +102,37 @@ function Character:fllow(entity)
 			self:doEvent("stop")
 			return true
 		end, self.id, true)
-	self.fllowEntity_:on("move",
-		function()
-			if not self.fllowEntity_ then
-				return true
-			end
-			if not Game:isSelf(self) and self:distanceWith(self.fllowEntity_) > 10 then
-				self:cancelFllow()
-			else
-				local pos = self.fllowEntity_:getMapPos()
-				local path = Game:findPath(pos, self.curPos_)
-				self:walkPath(path)
-			end
-		end, self.id, true)
+	-- self.fllowEntity_:on("move",
+	-- 	function()
+	-- 		if not self.fllowEntity_ then
+	-- 			return true
+	-- 		end
+	-- 		if not Game:isSelf(self) and self:distanceWith(self.fllowEntity_) > 10 then
+	-- 			self:cancelFllow()
+	-- 		else
+	-- 			local pos = self.fllowEntity_:getMapPos()
+	-- 			local path = Game:findPath(pos, self.curPos_)
+	-- 			self:walkPath(path)
+	-- 		end
+	-- 	end, self.id, true)
 	self.fllowEntity_:on("exit",
 		function()
 			printInfo("Character fllow is exit %d", self.id)
 			self:cancelFllow()
 			return true
 		end, self.id, true)
+
+	if self:distanceWith(self.fllowEntity_) > 1 then
+		local pos = self.fllowEntity_:getMapPos()
+		-- local path = Game:findPath(pos, self.curPos_)
+		-- self:walkPath(path)
+		self:walkToPosReq(pos)
+	end
+
 end
 
 function Character:cancelFllow()
+	self:cancelAttackReq()
 	if not self.fllowEntity_ then
 		return
 	end
@@ -212,6 +204,7 @@ function Character:walkPath(path)
 end
 
 function Character:walkStep(dir, step)
+	printInfo("Character walkStep")
 	if self.isWalking_ then
 		printInfo("Entity:walkStep is walking just return")
 		return
@@ -283,6 +276,7 @@ function Character:onWalkStepComplete_()
 end
 
 function Character:playWalk(orientation)
+	printInfo("Character play walk")
 	local orientation = self.orientation_
 	if Orientation.UP == orientation then
 		self:play("walk_up")
@@ -387,6 +381,25 @@ function Character:attackReq()
 	end
 end
 
+function Character:attackReqAuto()
+	if self.attackHandle_ then
+		return
+	end
+
+	local attackHandle = Schedule:scheduleScriptFunc(function()
+		self:attackReq()
+	end, Character.COOL_DOWN_TIME, false)
+	self.attackHandle_ = attackHandle
+end
+
+function Character:cancelAttackReq()
+	if not self.attackHandle_ then
+		return
+	end
+	Schedule:unscheduleScriptEntry(self.attackHandle_)
+	self.attackHandle_ = nil
+end
+
 function Character:attack(entity)
 	self:fllow(entity)
 	self.attackEntity_ = entity or self.attackEntity_
@@ -399,7 +412,7 @@ function Character:attack(entity)
 	if 1 == self:distanceWith(self.attackEntity_) then
 		printInfo("Character attack entity %d, %d", self.id, self.attackEntity_.id)
 		if not self.isCoolDown then
-			self:attackReq()
+			self:attackReqAuto()
 		else
 			print("Character:attack in cool down time")
 		end

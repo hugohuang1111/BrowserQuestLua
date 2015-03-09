@@ -325,6 +325,10 @@ function GameScene:onTouchEnded(touch, event)
 		-- 	entity:doEvent("kill")
 		-- end
 
+		if Game:getUser().fllowEntity_ then
+			Game:getUser().fllowEntity_.fllowEntity_ = nil
+			Game:getUser().fllowEntity_ = nil
+		end
 		Game:getUser():walkToPosReq(mapPos)
 		-- local drawNode = Utilitys.genPathNode(path)
 		-- Game:getMap():removeChildByTag(111)
