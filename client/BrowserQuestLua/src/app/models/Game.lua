@@ -108,6 +108,7 @@ function Game:netCallback(data)
 		app:enterScene("GameScene")
 		self:saveData()
 	elseif "user.entry" == action then
+		dump(body, "Game netCallback body:")
 		if self.user_ and body.id ~= self.user_:getId() then
 			self:createPlayer(body)
 		else
@@ -168,6 +169,11 @@ function Game:netCallback(data)
 		local target = self:findEntityById(body.target)
 		local sender = self:findEntityById(body.sender)
 
+		if not target then
+			printInfo("Game attackMove target is nil %d", body.target)
+			return
+		end
+
 		printInfo("Game attack entity sender:%d, target:%d", sender:getId(), target:getId())
 
 		sender:attack(target)
@@ -175,6 +181,15 @@ function Game:netCallback(data)
 		local target = self:findEntityById(body.target)
 		local sender = self:findEntityById(body.sender)
 		local userId = self.user_:getId()
+
+		if not sender or not target then
+			printInfo("Game netCallback sender or target is nil %d,%d", body.target, body.sender)
+			return
+		end
+		if not sender.attackEntity_ then
+			printInfo("Game netCallback sender's attackEntity_ is nil")
+			return
+		end
 
 		if body.dead then
 			return

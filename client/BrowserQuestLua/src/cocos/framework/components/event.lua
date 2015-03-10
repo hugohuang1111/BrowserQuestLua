@@ -30,10 +30,10 @@ function Event:unbind(target)
     self:init_()
 end
 
-function Event:on(eventName, listener, tag, once)
+function Event:on(eventName, listener, tag)
     assert(type(eventName) == "string" and eventName ~= "",
         "Event:addEventListener() - invalid eventName")
-    if once and self:hasEventListener(eventName, tag) then
+    if self:hasEventListener(eventName, tag) then
         if DEBUG > 1 then
             printInfo("%s [Event] addEventListener() - event: %s, handle: %s, tag: \"%s\" exist",
                       tostring(self.target_), eventName, handle, tostring(tag))

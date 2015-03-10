@@ -95,37 +95,29 @@ function Character:fllow(entity)
 		return
 	end
 
+	printInfo("Character %d fllow %d", self.id, self.fllowEntity_.id)
+
 	self.fllowEntity_:on("death",
 		function()
 			self:cancelFllow()
 			printInfo("Character fllow is death %d", self.id)
 			self:doEvent("stop")
 			return true
-		end, self.id, true)
-	-- self.fllowEntity_:on("move",
-	-- 	function()
-	-- 		if not self.fllowEntity_ then
-	-- 			return true
-	-- 		end
-	-- 		if not Game:isSelf(self) and self:distanceWith(self.fllowEntity_) > 10 then
-	-- 			self:cancelFllow()
-	-- 		else
-	-- 			local pos = self.fllowEntity_:getMapPos()
-	-- 			local path = Game:findPath(pos, self.curPos_)
-	-- 			self:walkPath(path)
-	-- 		end
-	-- 	end, self.id, true)
+		end, self.id)
+	self.fllowEntity_:on("move",
+		function()
+			self:cancelFllow()
+			return true
+		end, self.id)
 	self.fllowEntity_:on("exit",
 		function()
 			printInfo("Character fllow is exit %d", self.id)
 			self:cancelFllow()
 			return true
-		end, self.id, true)
+		end, self.id)
 
 	if self:distanceWith(self.fllowEntity_) > 1 then
 		local pos = self.fllowEntity_:getMapPos()
-		-- local path = Game:findPath(pos, self.curPos_)
-		-- self:walkPath(path)
 		self:walkToPosReq(pos)
 	end
 
@@ -136,8 +128,11 @@ function Character:cancelFllow()
 	if not self.fllowEntity_ then
 		return
 	end
+	local fllowEntity = self.fllowEntity_
 	self.fllowEntity_:removeEventListenersByTag(self.id)
 	self.fllowEntity_ = nil
+
+	fllowEntity:cancelFllow()
 end
 
 function Character:lookAt(entity)
@@ -342,6 +337,7 @@ function Character:stopAtk()
 end
 
 function Character:playDeath()
+	self:setId(0) -- invalid id
 	local args = {
 		isOnce = true,
 		onComplete = function()

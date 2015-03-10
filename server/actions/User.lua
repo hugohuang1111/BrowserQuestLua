@@ -9,6 +9,7 @@ function User:ctor(connect)
 end
 
 function User:welcome(args)
+	printInfo("User welcome entity")
 	local msg = NetMsg.parser(args)
 	local playerInfo = msg:getBody()
 	msg:setBody(nil)
@@ -22,6 +23,7 @@ function User:welcome(args)
 
 	local player = World:getPlayerEntity(playerInfo.nickName, playerInfo.id)
 	player:resetHealth()
+	player:save()
 
 	playerInfo = player:getPlayerInfo()
 
@@ -34,6 +36,8 @@ function User:welcome(args)
 	self.connect_:sendMessageToSelf(msg:getString())
 
 	World:playerEntry(playerInfo.id)
+
+	printInfo("User welcome exit")
 end
 
 function User:reborn(args)

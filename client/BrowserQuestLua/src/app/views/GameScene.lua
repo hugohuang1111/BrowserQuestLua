@@ -157,6 +157,7 @@ end
 
 function GameScene:playerInfoHandler(user)
 	local healthPercent = user:getHealthPercent()
+	printInfo("GameScene player healthPercent %d", healthPercent)
 	if not healthPercent or healthPercent < 0 then
 		return
 	end
@@ -298,7 +299,16 @@ function GameScene:onTouchEnded(touch, event)
 	local mapPos = Utilitys.px2pos(mapPospx)
 
 	local entitys = Game:findEntityByPos(mapPos)
-	local entity = entitys[1]
+	local entity
+	for i,v in ipairs(entitys) do
+		if v.type_ > v.TYPE_MOBS_BEGIN and v.type_ < v.TYPE_MOBS_END then
+			entity = v
+			break
+		end
+	end
+	if not entity then
+		entity = entitys[1]
+	end
 
 	-- if self.istest then
 	-- 	Game:getUser():playIdle()		

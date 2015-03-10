@@ -169,6 +169,7 @@ function Entity:playIdle()
 end
 
 function Entity:playDeath()
+	self:setId(0) -- invalid id
 	self:play("death",
 		{
 			removeSelf = true,
