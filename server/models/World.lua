@@ -19,6 +19,7 @@ function World:ctor(connect)
     self.redis_:connect()
 
     self.player_ = {}
+    self.attackIds_ = {}
 end
 
 function World:setMapPath(path)
@@ -249,6 +250,31 @@ function World:getOnlinePlayer()
 	return playerInfos
 end
 
+function World:addAttackEntity(id)
+	table.insert(self.attackIds_, id)
+end
+
+function World:removeAttackEntity(id)
+	local pos
+	for i,v in ipairs(self.attackIds_) do
+		if v == id then
+			pos = i
+			break
+		end
+	end
+	table.remove(self.attackIds_, pos)
+end
+
+function World:clearAttack(playerId)
+	for i,v in ipairs(self.attackIds_) do
+		local entity = self:getEntity(v)
+		if playerId == entity:getAttack() then
+			entity:setAttack(0)
+		end
+	end
+	self.attackIds_ = {}
+end
+
 
 
 function World:playerEntry(id)
@@ -282,6 +308,8 @@ function World:playerQuit(id)
 	msg:setBody({id = playerId})
 
 	self.connect_:sendMessageToChannel(_CHANNEL_ALL_, msg:getString())
+
+	self:clearAttack(playerId)
 end
 
 function World:playerMove(args)

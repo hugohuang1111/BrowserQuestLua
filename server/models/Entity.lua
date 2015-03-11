@@ -102,6 +102,12 @@ function Entity:setRedis(redis)
 	self.redis_ = redis
 end
 
+function Entity:getRedis()
+	local redis = self.redis_ or World:getRedis()
+	self.redis_ = redis
+	return redis
+end
+
 function Entity:setName(name)
 	local t = "TYPE_" .. name
 	t = string.upper(t)
@@ -157,6 +163,20 @@ function Entity:getId()
 	return self.attributes_.id
 end
 
+function Entity:setAttack(id)
+	if 0 == id then
+		World:removeAttackEntity(self.attributes_.id)
+	else
+		World:addAttackEntity(self.attributes_.id)
+	end
+	self:getRedis():command("HMSET", self.attributes_.id, "attack", id or 0)
+end
+
+function Entity:getAttack()
+	local vals = self:getRedis():command("HMGET", self.attributes_.id, "attack")
+	return tonumber(vals and vals[1])
+end
+
 function Entity:setMaxHealth(max)
 	self.attributes_.healthMax = max
 end
@@ -196,6 +216,7 @@ function Entity:getInfo()
 end
 
 function Entity:reborn()
+	self:setAttack(0)
 	self:setRandomPos()
 	self.attributes_.health = self.attributes_.healthMax
 

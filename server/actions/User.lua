@@ -109,9 +109,25 @@ function User:attack(args)
 			World:broadcast("mob.dead", {id = body.target})
 			target:reborn()
 		else
+			sender:setAttack(0)
 			World:broadcast("user.dead", {id = body.target})
 		end
+	else
+		local attackId = target:getAttack()
+		if 0 == attackId then
+			target:setAttack(body.sender)
+			World:sendMsg("mob.attack", {sender = body.target, target = body.sender})
+		end
 	end
+end
+
+function User:cancelAttack(args)
+	local msg = NetMsg.parser(args)
+	local body = msg:getBody()
+
+	local sender = World:getEntity(body.sender)
+	local target = World:getEntity(body.target)
+	target:setAttack(0)
 end
 
 return User

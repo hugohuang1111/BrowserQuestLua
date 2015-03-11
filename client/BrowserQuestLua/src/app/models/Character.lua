@@ -70,6 +70,15 @@ function Character:setWalkSpeed(speed)
 end
 
 function Character:setAttackEntity(entity)
+	if self.attackEntity_ == entity then
+		printInfo("Character:setAttackEntity entity is same")
+		return
+	end
+
+	if self.attackEntity_ then
+		self.attackEntity_:removeEventListenersByTag(self.id)
+	end
+
 	self.attackEntity_ = entity
 
 	self.attackEntity_:on("death",
@@ -87,6 +96,10 @@ function Character:setAttackEntity(entity)
 			Utilitys.invokeFuncASync(handler(self, self.cancelAttack))
 			return true
 		end, self.id)
+end
+
+function Character:getAttackEntity()
+	return self.attackEntity_
 end
 
 function Character:setTalkEntity(entity)

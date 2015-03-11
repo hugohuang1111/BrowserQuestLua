@@ -167,10 +167,21 @@ function Game:netCallback(data)
 		end
 
 		if sender then
+			sender:setAttackEntity(target)
+			-- need set pos?
 			local orientation = Utilitys.getOrientation(sender:getMapPos(), sender.attackEntity_:getMapPos())
 			sender:setOrientation(orientation)
 			sender:doEvent("attack")
 		end
+	elseif "mob.attack" == action then
+		local target = self:findEntityById(body.target)
+		local sender = self:findEntityById(body.sender)
+		local userId = self.user_:getId()
+		if not sender or not target then
+			printInfo("Game:netCallback sender or target is nil %d,%d", body.target, body.sender)
+			return
+		end
+		sender:attackReqAuto()
 	elseif "mob.reborn" == action then
 		local hander
 		hander = Schedule:scheduleScriptFunc(function()
