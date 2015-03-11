@@ -77,4 +77,41 @@ function User:info(args)
 	entity:save()
 end
 
+function User:move(args)
+	local msg = NetMsg.parser(args)
+	local body = msg:getBody()
+	local entity = World:getEntity(body.id)
+	entity:setPos(body.to)
+	if entity.getPlayerInfo then
+		-- entity is player instance
+		entity:healthChange(1)
+	end
+	entity:save()
+
+	World:broadcast("user.move", body)
+end
+
+function User:attack(args)
+	local msg = NetMsg.parser(args)
+	local body = msg:getBody()
+
+	local sender = World:getEntity(body.sender)
+	local target = World:getEntity(body.target)
+	local reduceBoold = -10 -- (10 + math.random(1, 10))
+	local afterboold = target:healthChange(reduceBoold)
+	body.healthChange = reduceBoold
+	body.dead = (afterboold <= 0)
+
+	World:broadcast("user.attack", body)
+
+	if body.dead then
+		if target:isMob() then
+			World:broadcast("mob.dead", {id = body.target})
+			target:reborn()
+		else
+			World:broadcast("user.dead", {id = body.target})
+		end
+	end
+end
+
 return User

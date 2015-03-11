@@ -36,6 +36,7 @@ function Entity:save()
 	local attr = self.attributes_
 	local redis = self.redis_ or World:getRedis()
 	self.redis_ = redis
+	printInfo("Entity save orientation %s", tostring(attr.orientation))
 	redis:command("HMSET", attr.id,
 		"posX", attr.pos.x or 0,
 		"posY", attr.pos.y or 0,
@@ -45,7 +46,8 @@ function Entity:save()
 		"roamingX", attr.roamingArea.x or 0,
 		"roamingY", attr.roamingArea.y or 0,
 		"roamingW", attr.roamingArea.width or 0,
-		"roamingH", attr.roamingArea.height or 0)
+		"roamingH", attr.roamingArea.height or 0,
+		"orientation", attr.orientation or Orientation.DOWN)
 end
 
 function Entity:load(entityId)
@@ -53,7 +55,7 @@ function Entity:load(entityId)
 	self.attributes_.id = tonumber(id)
 	local redis = self.redis_ or World:getRedis()
 	self.redis_ = redis
-	local vals = redis:command("HMGET", id, "posX", "posY", "health", "healthMax", "type", "roamingX", "roamingY", "roamingW", "roamingH")
+	local vals = redis:command("HMGET", id, "posX", "posY", "health", "healthMax", "type", "roamingX", "roamingY", "roamingW", "roamingH", "orientation")
 	if not vals then
 		return false
 	end
@@ -64,6 +66,10 @@ function Entity:load(entityId)
 	attr.healthMax = tonumber(vals[4]) or attr.healthMax
 	attr.type = tonumber(vals[5])
 	attr.roamingArea = cc.rect(tonumber(vals[6] or 0), tonumber(vals[7] or 0), tonumber(vals[8] or 0), tonumber(vals[9] or 0))
+	attr.orientation = tonumber(vals[10])
+	if 0 == attr.orientation then
+		attr.orientation = Orientation.DOWN
+	end
 
 	return true
 end
@@ -168,18 +174,13 @@ function Entity:healthChange(val)
 	self.redis_ = redis
 	self.attributes_.health = redis:command("HGET", self.attributes_.id, "health")
 	self.attributes_.health = self.attributes_.health + val
-	local afterHealth = self.attributes_.health
 	if self.attributes_.health > self.attributes_.healthMax then
 		self.attributes_.health = self.attributes_.healthMax
-	elseif self.attributes_.health <= 0 then
-		self.attributes_.health = 0
-		World:broadcast("play.dead", {id = self.attributes_.id})
-		self:reborn()
 	end
 
 	redis:command("HSET", self.attributes_.id, "health", self.attributes_.health)
 
-	return afterHealth
+	return self.attributes_.health
 end
 
 function Entity:getInfo()
@@ -189,6 +190,7 @@ function Entity:getInfo()
 	entityInfo.pos = attr.pos
 	entityInfo.id = attr.id
 	entityInfo.type = attr.type
+	entityInfo.orientation = attr.orientation
 
 	return entityInfo
 end
@@ -199,7 +201,7 @@ function Entity:reborn()
 
 	self:save()
 
-	World:broadcast("play.reborn", self:getInfo())
+	World:broadcast("mob.reborn", self:getInfo())
 end
 
 function Entity:isDead()

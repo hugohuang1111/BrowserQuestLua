@@ -273,6 +273,18 @@ function GameScene:addWorlChat(args)
 	lineNode:addTo(node)
 end
 
+function GameScene:findNeighbourPos(pos, origin)
+	local path = Game:findPath(pos, origin)
+	local endPos = path[#path]
+	if #path > 1 then
+		if endPos.x == pos.x and endPos.y == pos.y then
+			endPos = path[#path-1]
+		end
+	end
+
+	return endPos
+end
+
 
 function GameScene:onTouchBegan(touch, event)
 	return true
@@ -294,10 +306,12 @@ function GameScene:onTouchEnded(touch, event)
 		return
 	end
 
+	local user = Game:getUser()
 	local pos = touch:getLocation()
 	local mapPospx = Game:getMap():convertToNodeSpace(pos)
 	local mapPos = Utilitys.px2pos(mapPospx)
 
+	dump(mapPos, "GameScene click on map position:")
 	local entitys = Game:findEntityByPos(mapPos)
 	local entity
 	for i,v in ipairs(entitys) do
@@ -310,39 +324,27 @@ function GameScene:onTouchEnded(touch, event)
 		entity = entitys[1]
 	end
 
-	-- if self.istest then
-	-- 	Game:getUser():playIdle()		
-	-- else
-	-- 	Game:getUser():playAtk()
-	-- 	self.istest = true
-	-- end
-
 	if entity then
+		local neighbour = self:findNeighbourPos(mapPos, user:getMapPos())
 		local entityType = entity:getType()
 		if entity.TYPE_MOBS_BEGIN < entityType and entityType < entity.TYPE_MOBS_END then
-			Game:getUser():attackMoveReq(entity)
+			user:setAttackEntity(entity)
+			if 1 == user:distanceWith(entity) then
+				user:attackReqAuto()
+			else
+				user:walkToPosReq(neighbour)
+			end
 		elseif entity.TYPE_NPCS_BEGIN < entityType and entityType < entity.TYPE_NPCS_END then
-			Game:getUser():talk(entity)
+			user:setTalkEntity(entity)
+			user:walkToPosReq(neighbour)
 		elseif (entity.TYPE_ARMORS_BEGIN < entityType and entityType < entity.TYPE_ARMORS_END)
 			or (entity.TYPE_WEAPONS_BEGIN < entityType and entityType < entity.TYPE_WEAPONS_END) then
-			Game:getUser():loot(entity)
-			-- Game:getUser():changeWeapon("axe.png")
+			user:setLootEntity(entity)
+			user:walkToPosReq(mapPos)
 		end
 	else
-
-		-- local entity = Game:findEntityById(1011)
-		-- if entity then
-		-- 	entity:doEvent("kill")
-		-- end
-
-		if Game:getUser().fllowEntity_ then
-			Game:getUser().fllowEntity_.fllowEntity_ = nil
-			Game:getUser().fllowEntity_ = nil
-		end
-		Game:getUser():walkToPosReq(mapPos)
-		-- local drawNode = Utilitys.genPathNode(path)
-		-- Game:getMap():removeChildByTag(111)
-		-- Game:getMap():addChild(drawNode, 100, 111)
+		user:cancelAttack()
+		user:walkToPosReq(mapPos)
 	end
 end
 

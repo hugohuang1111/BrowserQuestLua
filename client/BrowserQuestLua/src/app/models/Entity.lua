@@ -144,6 +144,11 @@ function Entity:getType()
 	return self.type_
 end
 
+function Entity:stopAllActions()
+	local sp = self.view_:getChildByTag(Entity.VIEW_TAG_SPRITE)
+	sp:stopAllActions()
+end
+
 function Entity:play(actionName, args)
 	printInfo("Entity play actionName:%s", actionName)
 	local result = self:getFrames_(actionName)

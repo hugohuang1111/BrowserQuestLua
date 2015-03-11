@@ -1,6 +1,7 @@
 
 local Orientation = import(".Orientation")
 local Types = import(".Types")
+local Schedule = cc.Director:getInstance():getScheduler()
 local Utilitys = {}
 
 
@@ -78,6 +79,16 @@ function Utilitys.genRandomName()
 	local idx = math.random(100, 999)
 
 	return "Player_" .. tostring(idx)
+end
+
+function Utilitys.invokeFuncASync(func, time)
+	time = time or 0.1
+	local handle
+    handle = Schedule:scheduleScriptFunc(function()
+        Schedule:unscheduleScriptEntry(handle)
+        func()
+    end, time, false)
+    return handle
 end
 
 return Utilitys

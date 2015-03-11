@@ -50,6 +50,7 @@ function Player:getPlayerInfo()
 	playerInfo.pos = attr.pos
 	playerInfo.id = tonumber(attr.id)
 	playerInfo.healthPercent = attr.health/attr.healthMax
+	playerInfo.orientation = attr.orientation
 
 	return playerInfo
 end

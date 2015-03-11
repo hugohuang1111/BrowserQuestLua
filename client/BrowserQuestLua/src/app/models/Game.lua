@@ -5,6 +5,7 @@ local Utilitys = import(".Utilitys")
 local Types = import(".Types")
 local Game = class("Game")
 local AStar = import(".AStar")
+local Schedule = cc.Director:getInstance():getScheduler()
 local gInstance = nil
 
 Game.new_ = Game.new
@@ -132,12 +133,56 @@ function Game:netCallback(data)
 		local deadBg = app.curScene:getChildByTag(201)
 		if deadBg then
 			deadBg:removeSelf()
-		end
+		end		
 	elseif "user.info" == action then
 		local entity = self:findEntityById(body.id)
 		if self:isSelf(entity) then
 			self.user_:setHealthPercent(body.healthPercent)
 			self.onPlayerInfoChangeFunc_(entity)
+		end
+	elseif "user.move" == action then
+		local entity = self:findEntityById(body.id)
+		if entity then
+			entity:doEvent("stop")
+			entity:walkToPos(body.to, body.from)
+		else
+			printInfo("Game:netCallback Can't find entity %d", body.id)
+		end
+	elseif "user.attack" == action then
+		local target = self:findEntityById(body.target)
+		local sender = self:findEntityById(body.sender)
+		local userId = self.user_:getId()
+
+		if not sender or not target then
+			printInfo("Game:netCallback sender or target is nil %d,%d", body.target, body.sender)
+			return
+		end
+
+		if body.dead then
+			return
+		end
+
+		if body.target == userId or body.sender == userId then
+			target:showReduceHealth(body.healthChange)
+		end
+
+		if sender then
+			local orientation = Utilitys.getOrientation(sender:getMapPos(), sender.attackEntity_:getMapPos())
+			sender:setOrientation(orientation)
+			sender:doEvent("attack")
+		end
+	elseif "mob.reborn" == action then
+		local hander
+		hander = Schedule:scheduleScriptFunc(function()
+			Schedule:unscheduleScriptEntry(hander)
+			self:createEntity(body)
+		end, 10, false)
+	elseif "mob.dead" == action or "user.dead" == action then
+		local entity = self:findEntityById(body.id)
+		if entity then
+			entity:doEvent("kill")
+		else
+			printInfo("Game:netCallback can't find %d", body.id)
 		end
 	elseif "play.move" == action then
 		-- if not self:isSelfCmd(msg) then
@@ -146,7 +191,7 @@ function Game:netCallback(data)
 				printInfo("enity %s", tostring(entity))
 				if entity then
 					entity:doEvent("stop")
-					entity:cancelFllow()
+					entity:cancelAttackReq()
 					entity:walkToPos(body.to, body.from)
 				end
 			-- end
@@ -154,11 +199,6 @@ function Game:netCallback(data)
 	elseif "play.dead" == action then
 		local entity = self:findEntityById(body.id)
 		printInfo("play entity %s user %s", tostring(entity), tostring(self.user_))
-		-- self:removeEntity(entity)
-		-- if entity.fllowEntity_ then
-		-- 	entity.fllowEntity_.fllowEntity_ = nil
-		-- end
-		-- entity.fllowEntity_ = nil
 
 		if entity then
 			entity:doEvent("kill")
@@ -166,6 +206,10 @@ function Game:netCallback(data)
 	elseif "play.reborn" == action then
 		self:createEntity(body)
 	elseif "play.attackMove" == action then
+		if 0 == body.target or 0 == body.sender then
+			printInfo("(sender,target) id is (%d,%d)", body.sender or 0, body.target or 0)
+			return
+		end
 		local target = self:findEntityById(body.target)
 		local sender = self:findEntityById(body.sender)
 
@@ -205,6 +249,7 @@ function Game:netCallback(data)
 		if sender then
 			sender:doEvent("attack",
 				Utilitys.getOrientation(sender:getMapPos(), sender.attackEntity_:getMapPos()))
+			sender:sendInfoToServer()
 		end
 	elseif "play.chat" == action then
 		local player = self:findEntityById(body.id)
@@ -318,9 +363,10 @@ function Game:createEntity(entityInfo)
 		printInfo("Game:createEntity unsupport entity:" .. name)
 		return
 	end
-	local entity = cls.new()
+	local entity = cls.new({orientation = entityInfo.orientation})
 	entity:setMapPos(entityInfo.pos)
 	entity:setId(entityInfo.id)
+	entity:setOrientation(entityInfo.orientation)
 	self:addObject(entity)
 end
 
@@ -345,10 +391,12 @@ function Game:createPlayer(playerInfo)
 	local player = require("app.models.Player").new({
 		image = playerInfo.imageName,
 		weaponName = playerInfo.weaponName,
-		name = playerInfo.nickName
+		name = playerInfo.nickName,
+		orientation = playerInfo.orientation
 		})
 	player:setMapPos(playerInfo.pos)
 	player:setId(playerInfo.id)
+	player:setOrientation(playerInfo.orientation)
 
 	self.map_:addChild(player:getView(), 201)
 	self:addEntity(player)
@@ -385,11 +433,13 @@ function Game:addObject(entity)
 end
 
 function Game:addEntity(entity)
+	printInfo("Game addEntity idx:%d, id:%d, type:%d", entity:getIdx(), entity.id, entity.type_)
 	self.entitys_[entity:getIdx()] = entity
 end
 
 function Game:removeEntity(entity)
-	printInfo("remove entity id:%d, type:%d", entity.id, entity.type_)
+	printInfo("Game removeEntity idx:%d, id:%d, type:%d", entity:getIdx(), entity.id, entity.type_)
+	entity:stopAllActions()
 	entity:getView():removeSelf()
 	self.entitys_[entity:getIdx()] = nil
 end
@@ -399,6 +449,7 @@ function Game:findEntityByPos(p)
 	for k, v in pairs(self.entitys_) do
 		if v.curPos_.x == p.x and v.curPos_.y == p.y then
 			table.insert(entitys, v)
+			printInfo("Game findEntityByPos id:%d", v.id)
 		end
 	end
 
@@ -406,6 +457,10 @@ function Game:findEntityByPos(p)
 end
 
 function Game:findEntityById(id)
+	if 0 == id then
+		return nil
+	end
+
 	for k,v in pairs(self.entitys_) do
 		if v:getId() == id then
 			return v

@@ -12,6 +12,8 @@ Character.PATH_FINISH = "pathingFinish"
 
 Character.VIEW_TAG_TALK = 103
 
+Character.INVALID_DISTANCE = 10000
+
 function Character:ctor(args)
 	local sm = cc.load("statemachine")
 	args.states = {
@@ -24,7 +26,7 @@ function Character:ctor(args)
 		}
 	}
 	
-	self.orientation_ = Orientation.DOWN
+	self.orientation_ = args.orientation or Orientation.DOWN
 	self.path_ = {}
 	self.fllowHandler_ = {}
 	self.sentences_ = args.sentences or {"hi, welcome to browser quest! -- from Quick Team"}
@@ -44,10 +46,19 @@ function Character:onAfterEvent(event)
 	Entity.onAfterEvent(self, event)
 
 	if "walk" == event.to then
+		self:dispatchEvent({name = "move"})
 		self:playWalk(self.orientation_)
 	elseif "atk" == event.to then
 		self:playAtk()
 	end
+end
+
+function Character:setOrientation(orientation)
+	orientation = orientation or Orientation.DOWN
+	if self.orientation_ ~= orientation then
+		self:sendInfoToServer()
+	end
+	self.orientation_ = orientation
 end
 
 function Character:setAttackSpeed(speed)
@@ -56,6 +67,34 @@ end
 
 function Character:setWalkSpeed(speed)
 	self.walkSpeed_ = speed
+end
+
+function Character:setAttackEntity(entity)
+	self.attackEntity_ = entity
+
+	self.attackEntity_:on("death",
+		function()
+			Utilitys.invokeFuncASync(handler(self, self.cancelAttack))
+			return true
+		end, self.id)
+	self.attackEntity_:on("move",
+		function()
+			Utilitys.invokeFuncASync(handler(self, self.cancelAttack))
+			return true
+		end, self.id)
+	self.attackEntity_:on("exit",
+		function()
+			Utilitys.invokeFuncASync(handler(self, self.cancelAttack))
+			return true
+		end, self.id)
+end
+
+function Character:setTalkEntity(entity)
+	self.talkEntity_ = entity
+end
+
+function Character:setLootEntity(entity)
+	self.lootEntity_ = entity
 end
 
 function Character:sendInfoToServer()
@@ -76,12 +115,16 @@ function Character:walk(pos)
 end
 
 function Character:walkToPosReq(destPos, origPos)
-	Game:sendCmd("play.move", {id = self.id, from = origPos, to = destPos})
+	Game:sendCmd("user.move", {id = self.id, from = origPos, to = destPos})
 end
 
 function Character:walkToPos(destPos, origPos)
-	dump(destPos, "Character walkToPos dest:")
-	dump(origPos, "Character walkToPos orig:")
+	if origPos then
+		printInfo("Character:walkToPos (%d,%d) to (%d,%d)", origPos.x or 0, origPos.y or 0, destPos.x, destPos.y)
+	else
+		printInfo("Character:walkToPos current Position to (%d,%d)", destPos.x, destPos.y)
+	end
+
 	self:setMapPos(origPos)
 	local path = Game:findPath(destPos, self.curPos_)
 	self:walkPath(path)
@@ -124,7 +167,7 @@ function Character:fllow(entity)
 end
 
 function Character:cancelFllow()
-	self:cancelAttackReq()
+	self:cancelAttackReqAuto()
 	if not self.fllowEntity_ then
 		return
 	end
@@ -178,6 +221,7 @@ end
 
 function Character:walkPath(path)
 	if not path then
+		printInfo("Character:walkPath path is nil")
 		return
 	end
 
@@ -186,10 +230,9 @@ function Character:walkPath(path)
 	end
 
 	if #path < 1 then
+		printInfo("Character:walkPath path length is 0")
 		return
 	end
-
-	-- dump(path, "walk path:")
 
 	self.path_ = path
 
@@ -199,9 +242,8 @@ function Character:walkPath(path)
 end
 
 function Character:walkStep(dir, step)
-	printInfo("Character walkStep")
 	if self.isWalking_ then
-		printInfo("Entity:walkStep is walking just return")
+		printInfo("Character:walkStep is walking just return")
 		return
 	end
 
@@ -218,8 +260,6 @@ function Character:walkStep(dir, step)
 		cur.x = cur.x + step
 	end
 
-	-- TODO check the cur pos is valid
-
 	pos = cur
 	local origin = self.curPos_
 	local destination = pos
@@ -232,41 +272,27 @@ function Character:walkStep(dir, step)
 	self.view_:moveTo(args)
 
 	self:doEvent("move", dir)
-
-	if Game:isSelf(self) then
-		-- Game:sendCmd("play.move", {id = self.id, from = origin, to = destination})
-		self:dispatchEvent({name = "move"})
-	end
 end
 
 function Character:onWalkStepComplete_()
 	self.isWalking_ = false
 
-	printInfo("id %d path count:%d", self.id, #self.path_)
+	printInfo("Character:onWalkStepComplete_ %d path count:%d", self.id, #self.path_)
 	if 0 == #self.path_ then
 		self:doEvent("stop")
-	else
-		printInfo("id %d fllow:%s", self.id, tostring(self.fllowEntity_))
-		if self.fllowEntity_ then
-			local dis = self:distanceWith(self.fllowEntity_)
-			if dis > 1 then
-				self:walkTo(table.remove(self.path_, 1))
-			elseif 1 == dis then
-				self:doEvent("stop")
-				self:lookAt(self.fllowEntity_)
-				printInfo("id %d fllow %s attack %s",
-					self.id, tostring(self.fllowEntity_), tostring(self.attackEntity_))
-				if self.attackEntity_ then
-					self:attack()
-				elseif self.talkEntity_ then
-					self.talkEntity_:talk()
-				elseif self.lootEntity_ then
-					self:lootItem(self.lootEntity_)
-				end
-			end
-		else
-			self:walkTo(table.remove(self.path_, 1))
+
+		if Game:isSelf(self) then
+			self:sendInfoToServer()
 		end
+		if 1 == self:distanceWith(self.attackEntity_) then
+			self:attackReqAuto()
+		elseif 1 == self:distanceWith(self.talkEntity_) then
+			self:talk()
+		elseif 1 == self:distanceWith(self.lootEntity_) then
+			self:lootItemReq()
+		end
+	else
+		self:walkTo(table.remove(self.path_, 1))
 	end
 end
 
@@ -301,20 +327,7 @@ function Character:playAtk(orientation)
 	local args = {
 		isOnce = true,
 		onComplete = function()
-			self.isCoolDown = true
 			self:doEvent("stop")
-			local handler
-			handler = cc.Director:getInstance():getScheduler():scheduleScriptFunc(function()
-				cc.Director:getInstance():getScheduler():unscheduleScriptEntry(handler)
-				self.isCoolDown = false
-				if self.fllowEntity_ then
-					-- attack must be have fllowentity
-					-- fllowentity is nil, needn't attack again
-					self:attack()
-				else
-					self:playIdle()
-				end
-			end, self.COOL_DOWN_TIME, false)
 		end}
 	local orientation = orientation or self.orientation_
 	if Orientation.UP == orientation then
@@ -349,6 +362,10 @@ function Character:playDeath()
 end
 
 function Character:distanceWith(entity)
+	if not entity then
+		return Character.INVALID_DISTANCE -- 10000 is bigger than map size
+	end
+
 	local disX = math.abs(entity.curPos_.x - self.curPos_.x)
 	local disY = math.abs(entity.curPos_.y - self.curPos_.y)
 
@@ -356,10 +373,15 @@ function Character:distanceWith(entity)
 end
 
 function Character:attackIf(entity)
-	if not entity or self.attackEntity_ == entity then
-		printInfo("id %d attackif %s", self.id, tostring(entity))
+	if self.attackHandle_ then
+		local id = 0
+		if entity then
+			id = entity:getId()
+		end
+		printInfo("Character:attackIf attacking ignore other attacker %d", id)
 		return
 	end
+
 	self:attack(entity)
 end
 
@@ -368,12 +390,23 @@ function Character:attackMoveReq(entity)
 end
 
 function Character:attackReq()
+	if not self.attackEntity_ then
+		printInfo("Character:attackReq attackEntity_ is nil")
+	end
+
 	local senderId = self.id
 	local targetId = self.attackEntity_:getId()
 	local userId = Game:getUser():getId()
 
+	if 0 == targetId then
+		printInfo("Character:attackReq target is invalid")
+		return
+	end
+
 	if userId == senderId or userId == targetId then
-		Game:sendCmd("play.attack", {sender = senderId, target = targetId})
+		Game:sendCmd("user.attack", {sender = senderId, target = targetId})
+	else
+		printInfo("ERROR Character:attackReq have't userid")
 	end
 end
 
@@ -388,12 +421,21 @@ function Character:attackReqAuto()
 	self.attackHandle_ = attackHandle
 end
 
-function Character:cancelAttackReq()
+function Character:cancelAttackReqAuto()
 	if not self.attackHandle_ then
 		return
 	end
 	Schedule:unscheduleScriptEntry(self.attackHandle_)
 	self.attackHandle_ = nil
+end
+
+function Character:cancelAttack()
+	if not self.attackEntity_ then
+		return
+	end
+	self:cancelAttackReqAuto()
+	self:doEvent("stop")
+	self.attackEntity_:removeEventListenersByTag(self.id)
 end
 
 function Character:attack(entity)
