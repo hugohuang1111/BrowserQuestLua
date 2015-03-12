@@ -56,9 +56,11 @@ function User:reborn(args)
 	player:resetHealth()
 	player:save()
 
-	msg:setBody(player:getPlayerInfo())
+	World:sendMsg("user.reborn", player:getPlayerInfo())
+	World:playerEntry(playerInfo.id)
 
-	return msg:getData()
+	-- msg:setBody(player:getPlayerInfo())
+	-- return msg:getData()
 end
 
 function User:info(args)
@@ -97,7 +99,7 @@ function User:attack(args)
 
 	local sender = World:getEntity(body.sender)
 	local target = World:getEntity(body.target)
-	local reduceBoold = -10 -- (10 + math.random(1, 10))
+	local reduceBoold = -5 -- (10 + math.random(1, 10))
 	local afterboold = target:healthChange(reduceBoold)
 	body.healthChange = reduceBoold
 	body.dead = (afterboold <= 0)
@@ -113,21 +115,26 @@ function User:attack(args)
 			World:broadcast("user.dead", {id = body.target})
 		end
 	else
-		local attackId = target:getAttack()
-		if 0 == attackId then
-			target:setAttack(body.sender)
-			World:sendMsg("mob.attack", {sender = body.target, target = body.sender})
+		if target:isMob() then
+			local attackId = target:getAttack()
+			printInfo("User:attack id %d", attackId)
+			if 0 == attackId then
+				target:setAttack(body.sender)
+				World:sendMsg("mob.attack", {sender = body.target, target = body.sender})
+			end
 		end
 	end
 end
 
-function User:cancelAttack(args)
+function User:cancelattack(args)
 	local msg = NetMsg.parser(args)
 	local body = msg:getBody()
 
 	local sender = World:getEntity(body.sender)
 	local target = World:getEntity(body.target)
-	target:setAttack(0)
+	if target:isMob() then
+		target:setAttack(0)
+	end
 end
 
 return User

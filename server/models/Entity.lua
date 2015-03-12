@@ -174,7 +174,7 @@ end
 
 function Entity:getAttack()
 	local vals = self:getRedis():command("HMGET", self.attributes_.id, "attack")
-	return tonumber(vals and vals[1])
+	return tonumber(vals and vals[1]) or 0
 end
 
 function Entity:setMaxHealth(max)

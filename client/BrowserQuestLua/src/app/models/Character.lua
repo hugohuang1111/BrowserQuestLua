@@ -363,7 +363,9 @@ function Character:stopAtk()
 end
 
 function Character:playDeath()
-	self:setId(0) -- invalid id
+	if not Game:isSelf(self) then
+		self:setId(0) -- invalid id
+	end
 	local args = {
 		isOnce = true,
 		onComplete = function()
@@ -404,7 +406,8 @@ end
 
 function Character:attackReq()
 	if not self.attackEntity_ then
-		printInfo("Character:attackReq attackEntity_ is nil")
+		printInfo("Character:attackReq attackEntity_ is nil %d", self.id)
+		return
 	end
 
 	local senderId = self.id
@@ -444,11 +447,36 @@ end
 
 function Character:cancelAttack()
 	if not self.attackEntity_ then
+		printInfo("Character:cancelAttack attackEntity_ is nil")
 		return
 	end
 	self:cancelAttackReqAuto()
 	self:doEvent("stop")
 	self.attackEntity_:removeEventListenersByTag(self.id)
+	self:cancelAttackReq()
+	self.attackEntity_ = nil
+end
+
+function Character:cancelAttackReq()
+	if not self.attackEntity_ then
+		printInfo("Character:cancelAttackReq attackEntity_ is nil %d", self.id)
+		return
+	end
+
+	local senderId = self.id
+	local targetId = self.attackEntity_:getId()
+	local userId = Game:getUser():getId()
+
+	if 0 == targetId then
+		printInfo("Character:cancelAttackReq target is invalid")
+		return
+	end
+
+	if userId == senderId or userId == targetId then
+		Game:sendCmd("user.cancelAttack", {sender = senderId, target = targetId})
+	else
+		printInfo("ERROR Character:cancelAttackReq have't userid")
+	end
 end
 
 function Character:attack(entity)

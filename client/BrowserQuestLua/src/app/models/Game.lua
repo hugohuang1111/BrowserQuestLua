@@ -181,7 +181,10 @@ function Game:netCallback(data)
 			printInfo("Game:netCallback sender or target is nil %d,%d", body.target, body.sender)
 			return
 		end
-		sender:attackReqAuto()
+		if 1 == sender:distanceWith(target) then
+			sender:setAttackEntity(target)
+			sender:attackReqAuto()
+		end
 	elseif "mob.reborn" == action then
 		local hander
 		hander = Schedule:scheduleScriptFunc(function()
@@ -191,6 +194,7 @@ function Game:netCallback(data)
 	elseif "mob.dead" == action or "user.dead" == action then
 		local entity = self:findEntityById(body.id)
 		if entity then
+			entity:cancelAttack()
 			entity:doEvent("kill")
 		else
 			printInfo("Game:netCallback can't find %d", body.id)
