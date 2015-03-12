@@ -276,6 +276,7 @@ end
 function GameScene:findNeighbourPos(pos, origin)
 	local path = Game:findPath(pos, origin)
 	local endPos = path[#path]
+
 	if #path > 1 then
 		if endPos.x == pos.x and endPos.y == pos.y then
 			endPos = path[#path-1]
@@ -336,14 +337,21 @@ function GameScene:onTouchEnded(touch, event)
 			end
 		elseif entity.TYPE_NPCS_BEGIN < entityType and entityType < entity.TYPE_NPCS_END then
 			user:setTalkEntity(entity)
-			user:walkToPosReq(neighbour)
+			if 1 == user:distanceWith(entity) then
+				user:talk()
+			else
+				user:walkToPosReq(neighbour)
+			end
 		elseif (entity.TYPE_ARMORS_BEGIN < entityType and entityType < entity.TYPE_ARMORS_END)
 			or (entity.TYPE_WEAPONS_BEGIN < entityType and entityType < entity.TYPE_WEAPONS_END) then
 			user:setLootEntity(entity)
 			user:walkToPosReq(mapPos)
 		end
 	else
+		-- clean attack and talk entity
 		user:cancelAttack()
+		user:setTalkEntity()
+
 		user:walkToPosReq(mapPos)
 	end
 end

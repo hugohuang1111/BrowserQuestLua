@@ -114,7 +114,9 @@ function Game:netCallback(data)
 			self:createPlayer(body)
 		else
 			self.user_:setHealthPercent(body.healthPercent)
-			self.onPlayerInfoChangeFunc_(self.user_)
+			if self.onPlayerInfoChangeFunc_ then
+				self.onPlayerInfoChangeFunc_(self.user_)
+			end
 		end
 	elseif "user.bye" == action then
 		local entity = self:findEntityById(body.id)
@@ -296,7 +298,7 @@ end
 --[[ DATA NETWORK PART END ]]
 
 function Game:onPlayerUIExit(callback)
-	self.user_:on("exit", function() callback() end)
+	self.user_:on("death", function() callback() end)
 end
 
 function Game:onPlayerMove(callback)

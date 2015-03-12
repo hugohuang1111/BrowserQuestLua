@@ -128,10 +128,10 @@ function Entity:getView()
 	display.newSprite(frame):addTo(self.view_, 1, Entity.VIEW_TAG_SPRITE)
 		:align(self.ANCHOR)
 
-	self.view_:enableNodeEvents()
-	self.view_.onExit = function()
-		self:dispatchEvent({name = "exit"})
-	end
+	-- self.view_:enableNodeEvents()
+	-- self.view_.onExit = function()
+	-- 	self:dispatchEvent({name = "exit"})
+	-- end
 
 	return self.view_
 end

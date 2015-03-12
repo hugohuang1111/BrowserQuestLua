@@ -91,11 +91,6 @@ function Character:setAttackEntity(entity)
 			Utilitys.invokeFuncASync(handler(self, self.cancelAttack))
 			return true
 		end, self.id)
-	self.attackEntity_:on("exit",
-		function()
-			Utilitys.invokeFuncASync(handler(self, self.cancelAttack))
-			return true
-		end, self.id)
 end
 
 function Character:getAttackEntity()
@@ -162,12 +157,6 @@ function Character:fllow(entity)
 		end, self.id)
 	self.fllowEntity_:on("move",
 		function()
-			self:cancelFllow()
-			return true
-		end, self.id)
-	self.fllowEntity_:on("exit",
-		function()
-			printInfo("Character fllow is exit %d", self.id)
 			self:cancelFllow()
 			return true
 		end, self.id)
@@ -499,14 +488,16 @@ function Character:attack(entity)
 end
 
 function Character:talk(entity)
-	self:fllow(entity)
 	self.talkEntity_ = entity or self.talkEntity_
 
 	if not self.talkEntity_ then
+		printInfo("Character:talk talkEntity_ is nil")
 		return
 	end
 	if 1 == self:distanceWith(self.talkEntity_) then
 		self.talkEntity_:talkSentence()
+	else
+		printInfo("Character:talk talkEntity_ is faraway")
 	end
 end
 
