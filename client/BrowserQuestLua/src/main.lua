@@ -21,9 +21,9 @@ require "cocos.network.NetworkConstants"
 
 
 
-device.writablePath =
-	io.pathinfo(cc.FileUtils:getInstance():fullPathForFilename("browserquest.dat")).dirname
-printInfo("device.writablePath 1:" .. device.writablePath)
+-- device.writablePath =
+-- 	io.pathinfo(cc.FileUtils:getInstance():fullPathForFilename("browserquest.dat")).dirname
+-- printInfo("device.writablePath 1:" .. device.writablePath)
 
 
 local function main()
