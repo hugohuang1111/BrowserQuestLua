@@ -4,6 +4,7 @@ local Map = import(".Map")
 local Entity = import(".Entity")
 local Player = import(".Player")
 local RedisService = cc.load("redis").service
+local Timer = import(".Timer")
 local World = class("World")
 
 local _MAP_LOAD_ = "ismapLoad"
@@ -17,6 +18,9 @@ function World:ctor(connect)
 	self.connect_ = connect
 	self.redis_ = RedisService:create(connect.config.redis)
     self.redis_:connect()
+
+    -- self.timer_ = Timer:create(connect.config.beanstalkd, connect:getSession())
+    -- self.timer_:start()
 
     self.player_ = {}
     self.attackIds_ = {}
@@ -310,6 +314,8 @@ function World:playerQuit(id)
 	self.connect_:sendMessageToChannel(_CHANNEL_ALL_, msg:getString())
 
 	self:clearAttack(playerId)
+
+	-- self.timer_:stop()
 end
 
 function World:playerMove(args)
@@ -348,6 +354,10 @@ end
 
 function World:unsubscribeChannel()
     self.connect_:unsubscribeChannel(_CHANNEL_ALL_)
+end
+
+function World:timer(func, delay)
+	self.timer_:perform(func, delay)
 end
 
 

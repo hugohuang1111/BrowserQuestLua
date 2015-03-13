@@ -22,30 +22,34 @@ THE SOFTWARE.
 
 ]]
 
-local _DBG_ERROR = 0
-local _DBG_WARN  = 1
-local _DBG_INFO  = 2
-local _DBG_DEBUG = 3
-
-DEBUG = _DBG_DEBUG
+_DBG_ERROR = 0
+_DBG_WARN  = 1
+_DBG_INFO  = 2
+_DBG_DEBUG = 3
 
 local config = {
+    -- user app
+    -- appRootPath = "/opt/quick_server/<USER_APP_ROOT>",
     appRootPath = "/home/htl/MacDocuments/Work/BrowserQuestLua/server",
-    cmdRootPath = "/opt/quick_server/tools",
-
     actionModuleSuffix = "",
 
-    sessionExpiredTime = 60 * 10, -- 10m
+    numOfWorkers = 4,
 
-    websocketsTimeout       = 60 * 1000, -- 60s
+    appHttpMessageFormat   = "json",
+    appSocketMessageFormat = "json",
+    appJobMessageFormat    = "json",
+    appSessionExpiredTime  = 60 * 10, -- 10m
+
+    -- quick server
+    quickserverRootPath = "/opt/quick_server",
+    port = 8088,
+    welcomeEnabled = true,
+    adminEnabled = true,
+    websocketsTimeout = 60 * 1000, -- 60s
     websocketsMaxPayloadLen = 64 * 1024, -- 16KB
-    websocketsMessageFormat = "json",
-
     maxSubscribeRetryCount = 10,
 
-    jobMessageFormat = "json",
-    broadcastJobTube = "jobTube",
-
+    -- internal memory database
     redis = {
         socket     = "unix:/opt/quick_server/tmp/redis.sock",
         -- host       = "127.0.0.1",
@@ -53,46 +57,22 @@ local config = {
         timeout    = 10 * 1000, -- 10 seconds
     },
 
+    -- background job server
     beanstalkd = {
         host       = "127.0.0.1",
         port       = 11300,
+        jobTube    = "jobTube",
     },
 
-    -- external servers used by user
-    --[[
-    externalServers = {
-        mysql = {
-            host       = "127.0.0.1",
-            port       = 3306,
-            database   = "testdb",
-            user       = "test",
-            password   = "123456",
-            timeout    = 10 * 1000,
-        },
-    },
-    --]]
-
-    -- worker process thredsholds
+    -- internal monitor
     monitor = {
         process = {
             "nginx",
-            "redis",
+            "redis-server",
             "beanstalkd",
         },
 
-        mem = {
-            warning = 70,
-            critical = 90,
-        },
-
-        cpu = {
-            warning = 70,
-            critical = 90,
-        },
-
-        interval = 10, 
-
-        criticalStatePersistentTImes = 3, 
+        interval = 2,
     },
 }
 
