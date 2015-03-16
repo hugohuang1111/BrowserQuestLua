@@ -4,7 +4,7 @@ local Map = import(".Map")
 local Entity = import(".Entity")
 local Player = import(".Player")
 local RedisService = cc.load("redis").service
-local Timer = import(".Timer")
+-- local Timer = import(".Timer")
 local World = class("World")
 
 local _MAP_LOAD_ = "ismapLoad"
@@ -286,7 +286,7 @@ function World:playerEntry(id)
 	if not playerId then
 		return
 	end
-	self.connect_:setConnectTag(playerId)
+	self.curPlayId_ = playerId
 	self:setPlayerStatus(playerId, true)
 
 	local player = Player.new()
@@ -302,8 +302,7 @@ end
 function World:playerQuit(id)
 	local playerId = id
 	if not playerId then
-		playerId = self.connect_:getConnectTag()
-		playerId = tonumber(playerId)
+		playerId = tonumber(self.curPlayId_)
 	end
 	self:setPlayerStatus(playerId, false)
 

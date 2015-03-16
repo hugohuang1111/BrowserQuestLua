@@ -15,11 +15,6 @@ end
 
 function WebSocketConnect:afterConnectReady()
     World:subscribeChannel()
-    -- init
-    local uid = self:getSession():get("uid")
-    if uid then
-    	self:setConnectTag(uid)
-    end
 end
 
 function WebSocketConnect:beforeConnectClose()
