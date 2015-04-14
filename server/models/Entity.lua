@@ -216,13 +216,12 @@ function Entity:getInfo()
 end
 
 function Entity:reborn()
-	self:setAttack(0)
 	self:setRandomPos()
 	self.attributes_.health = self.attributes_.healthMax
 
 	self:save()
 
-	World:broadcast("mob.reborn", self:getInfo())
+	-- World:broadcast("mob.reborn", self:getInfo())
 end
 
 function Entity:isDead()

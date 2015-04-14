@@ -109,7 +109,9 @@ function User:attack(args)
 	if body.dead then
 		if target:isMob() then
 			World:broadcast("mob.dead", {id = body.target})
-			target:reborn()
+			target:setAttack(0)
+			-- target:reborn()
+			World:schedule("schedule.reborn", {id = body.target}, 10)
 		else
 			sender:setAttack(0)
 			World:broadcast("user.dead", {id = body.target})
