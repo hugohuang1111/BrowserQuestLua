@@ -82,8 +82,13 @@ function Game:createNet()
 	self.net_ = require("app.network.Net").getInstance()
 	self.net_:setAddr(SERVER_ADDR)
 	self.net_:on(handler(self, self.netCallback))
+	self.net_:onClose(handler(self, self.netClose))
 
 	self.net_:launch()
+end
+
+function Game:netClose()
+	app:enterScene("LoginScene")
 end
 
 function Game:netCallback(data)
@@ -151,6 +156,10 @@ function Game:netCallback(data)
 			printInfo("Game:netCallback Can't find entity %d", body.id)
 		end
 	elseif "user.attack" == action then
+		if not self.user_ then
+			return
+		end
+
 		local target = self:findEntityById(body.target)
 		local sender = self:findEntityById(body.sender)
 		local userId = self.user_:getId()

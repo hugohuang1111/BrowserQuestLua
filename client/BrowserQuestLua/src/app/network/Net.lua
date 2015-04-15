@@ -154,7 +154,8 @@ function Net:operCmd_()
 				self:sendReal_(cmd.data)
 				table.remove(self.sendCmds_, 1)
 			else
-				printInfo("Net operCmd error")
+				printInfo("Net operCmd error:%d", self.ws_:getReadyState())
+				return
 			end
 		end
 	end
