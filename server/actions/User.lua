@@ -99,6 +99,10 @@ function User:attack(args)
 
 	local sender = World:getEntity(body.sender)
 	local target = World:getEntity(body.target)
+	if target:isDead() then
+		return
+	end
+
 	local reduceBoold = -(10 + math.random(1, 10))
 	local afterboold = target:healthChange(reduceBoold)
 	body.healthChange = reduceBoold

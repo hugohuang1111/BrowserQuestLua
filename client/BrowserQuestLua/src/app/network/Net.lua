@@ -63,6 +63,8 @@ end
 
 function Net:wsClose()
 	self.ws_ = nil
+	self.protocol_ = nil
+	self.sendCmds_ = {}
 	printInfo("Net ws close")
 	if self.closeCB_ then
 		self.closeCB_()
@@ -140,12 +142,14 @@ function Net:operCmd_()
 			if self.ws_
 				and (cc.WEBSOCKET_STATE_CONNECTING == self.ws_:getReadyState()
 					or cc.WEBSOCKET_STATE_OPEN == self.ws_:getReadyState()) then
+				self.sendCmds_ = {}
 				self:disconnect()
 			end
 		elseif Net.CMD_SEND == cmd.cmd then
 			if not self.ws_ then
 				if self.protocol_ then
 					self:connect(self.addr_, self.protocol_)
+					printInfo("to Connect")
 				else
 					self:launch()
 				end

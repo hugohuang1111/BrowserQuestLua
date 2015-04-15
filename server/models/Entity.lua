@@ -225,7 +225,7 @@ function Entity:reborn()
 end
 
 function Entity:isDead()
-	return self.attributes_.health == 0
+	return self.attributes_.health < 1
 end
 
 return Entity

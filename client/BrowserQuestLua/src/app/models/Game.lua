@@ -197,12 +197,12 @@ function Game:netCallback(data)
 			sender:attackReqAuto()
 		end
 	elseif "mob.reborn" == action then
-		self:createEntity(body)
-		-- local hander
-		-- hander = Schedule:scheduleScriptFunc(function()
-		-- 	Schedule:unscheduleScriptEntry(hander)
-		-- 	self:createEntity(body)
-		-- end, 10, false)
+		local entity = self:findEntityById(body.id)
+		if entity then
+			printInfo("the entity is exist, needn't to reborn")
+		else
+			self:createEntity(body)
+		end
 	elseif "mob.dead" == action or "user.dead" == action then
 		local entity = self:findEntityById(body.id)
 		if entity then
