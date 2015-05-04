@@ -183,7 +183,7 @@ function Net:launch()
         	local resp = json.decode(xhr.response)
         	if resp or resp.sid then
         		self.sessionId_ = resp.sid
-        		self.protocol_ = "quickserver-" .. self.sessionId_
+        		self.protocol_ = "gbc-" .. self.sessionId_
             	self:connect(self.addr_, self.protocol_)
             	isSuccess = true
             else
