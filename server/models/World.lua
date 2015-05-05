@@ -8,12 +8,7 @@ local JobService = cc.load("job").service
 local BeansService = cc.load("beanstalkd").service
 local World = class("World")
 
-local _MAP_LOAD_ = "ismapLoad"
-local _REDIS_KEY_SETS_ENTITY_STATIC_ = "StaticEntitySets"
-local _CHANNEL_ALL_ = "ChannelAll"
-local _REDIS_KEY_SETS_PLAYER_ = "PlayerSets"
-local _REDIS_KEY_ID_COUNTER_ = "IDCounter"
-local IDCounterBegin = 100001
+local Constant = import(".Constant")
 
 function World:ctor(connect)
 	self.connect_ = connect
@@ -30,13 +25,13 @@ end
 
 function World:clearRedis()
 	local redis = self.redis_
-	redis:command("SET", _MAP_LOAD_, "no")
+	redis:command("SET", Constant._MAP_LOAD_, "no")
 end
 
 function World:initMapIf()
 	local redis = self.redis_
-	-- redis:command("SET", _MAP_LOAD_, "no")
-	local isLoaded = redis:command("GET", _MAP_LOAD_)
+	-- redis:command("SET", Constant._MAP_LOAD_, "no")
+	local isLoaded = redis:command("GET", Constant._MAP_LOAD_)
 	local entitys = {}
 	if not isLoaded or "no" == isLoaded then
 		local map = Map.new(self.mapPath_)
@@ -59,7 +54,7 @@ function World:initMapIf()
 			entity:save()
 			entitys[#entitys + 1] = entity
 
-			redis:command("SADD", _REDIS_KEY_SETS_ENTITY_STATIC_, entity:getId())
+			redis:command("SADD", Constant._REDIS_KEY_SETS_ENTITY_STATIC_, entity:getId())
 		end
 
 		-- generate roaming mobs
@@ -80,13 +75,16 @@ function World:initMapIf()
 		-- 		entity:save()
 		-- 		entitys[#entitys + 1] = entity
 
-		-- 		redis:command("SADD", _REDIS_KEY_SETS_ENTITY_STATIC_, entity:getId())
+		-- 		redis:command("SADD", Constant._REDIS_KEY_SETS_ENTITY_STATIC_, entity:getId())
 		-- 	end
 		-- end
 
-		redis:command("SET", _MAP_LOAD_, "yes")
+		-- launch game loop timer
+		self:schedule("schedule.loop", self.connect_.config, 1)
+
+		redis:command("SET", Constant._MAP_LOAD_, "yes")
 	else
-		local ids = redis:command("SMEMBERS", _REDIS_KEY_SETS_ENTITY_STATIC_)
+		local ids = redis:command("SMEMBERS", Constant._REDIS_KEY_SETS_ENTITY_STATIC_)
 		for i,id in ipairs(ids) do
 			local entity = Entity.new()
 			entity:setRedis(redis)
@@ -144,10 +142,10 @@ function World:getPlayerInfo(name, id)
 	local idCounter
 	idCounter = entity:getId()
 	if not idCounter then
-		idCounter = self.redis_:command("INCR", _REDIS_KEY_ID_COUNTER_)
+		idCounter = self.redis_:command("INCR", Constant._REDIS_KEY_ID_COUNTER_)
 		if 1 == idCounter then
-			self.redis_:command("SET", _REDIS_KEY_ID_COUNTER_, IDCounterBegin)
-			idCounter = IDCounterBegin
+			self.redis_:command("SET", Constant._REDIS_KEY_ID_COUNTER_, Constant.IDCounterBegin)
+			idCounter = Constant.IDCounterBegin
 		end
 	end
 	playerInfo.id = idCounter
@@ -183,10 +181,10 @@ function World:newPlayer()
 	entity:setPos(cc.p(math.random(35, 45), math.random(223, 234)))
 
 	local idCounter
-	idCounter = self.redis_:command("INCR", _REDIS_KEY_ID_COUNTER_)
+	idCounter = self.redis_:command("INCR", Constant._REDIS_KEY_ID_COUNTER_)
 	if 1 == idCounter then
-		self.redis_:command("SET", _REDIS_KEY_ID_COUNTER_, IDCounterBegin)
-		idCounter = IDCounterBegin
+		self.redis_:command("SET", Constant._REDIS_KEY_ID_COUNTER_, Constant.IDCounterBegin)
+		idCounter = Constant.IDCounterBegin
 	end
 	entity:setId(idCounter)
 
@@ -216,7 +214,7 @@ end
 
 function World:getEntity(id)
 	local cls
-	if id >= IDCounterBegin then
+	if id >= Constant.IDCounterBegin then
 		cls = Player
 	else
 		cls = Entity
@@ -230,14 +228,14 @@ end
 
 function World:setPlayerStatus(id, isOnline)
 	if isOnline then
-		self.redis_:command("SADD", _REDIS_KEY_SETS_PLAYER_, id)
+		self.redis_:command("SADD", Constant._REDIS_KEY_SETS_PLAYER_, id)
 	else
-		self.redis_:command("SREM", _REDIS_KEY_SETS_PLAYER_, id)
+		self.redis_:command("SREM", Constant._REDIS_KEY_SETS_PLAYER_, id)
 	end
 end
 
 function World:getOnlinePlayer()
-	local players = self.redis_:command("SMEMBERS", _REDIS_KEY_SETS_PLAYER_)
+	local players = self.redis_:command("SMEMBERS", Constant._REDIS_KEY_SETS_PLAYER_)
 	if not players then
 		return
 	end
@@ -294,7 +292,7 @@ function World:playerEntry(id)
 	msg:setAction("user.entry")
 	msg:setBody(player:getPlayerInfo())
 
-	self.connect_:sendMessageToChannel(_CHANNEL_ALL_, msg:getString())
+	self.connect_:sendMessageToChannel(Constant._CHANNEL_ALL_, msg:getString())
 end
 
 function World:playerQuit(id)
@@ -308,7 +306,7 @@ function World:playerQuit(id)
 	msg:setAction("user.bye")
 	msg:setBody({id = playerId})
 
-	self.connect_:sendMessageToChannel(_CHANNEL_ALL_, msg:getString())
+	self.connect_:sendMessageToChannel(Constant._CHANNEL_ALL_, msg:getString())
 
 	self:clearAttack(playerId)
 end
@@ -318,18 +316,18 @@ function World:playerMove(args)
 	msg:setAction("play.move")
 	msg:setBody(args)
 
-	self.connect_:sendMessageToChannel(_CHANNEL_ALL_, msg:getString())
+	self.connect_:sendMessageToChannel(Constant._CHANNEL_ALL_, msg:getString())
 end
 
 function World:broadcast(action, args)
 	local msg = NetMsg.new()
 	msg:setAction(action)
 	msg:setBody(args)
-	self.connect_:sendMessageToChannel(_CHANNEL_ALL_, msg:getString())
+	self.connect_:sendMessageToChannel(Constant._CHANNEL_ALL_, msg:getString())
 end
 
 function World:broadcastNetMsg(action, netMsg)
-	self.connect_:sendMessageToChannel(_CHANNEL_ALL_, netMsg:getString())
+	self.connect_:sendMessageToChannel(Constant._CHANNEL_ALL_, netMsg:getString())
 end
 
 function World:sendMsg(action, args)
@@ -341,14 +339,14 @@ end
 
 
 function World:subscribeChannel()
-    self.connect_:subscribeChannel(_CHANNEL_ALL_, function(msg)
+    self.connect_:subscribeChannel(Constant._CHANNEL_ALL_, function(msg)
         self.connect_:sendMessageToSelf(msg)
         return true
     end)
 end
 
 function World:unsubscribeChannel()
-    self.connect_:unsubscribeChannel(_CHANNEL_ALL_)
+    self.connect_:unsubscribeChannel(Constant._CHANNEL_ALL_)
 end
 
 function World:schedule(action, data, delay)

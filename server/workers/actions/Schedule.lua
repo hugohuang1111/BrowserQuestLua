@@ -1,11 +1,13 @@
 
 local Schedule = class("Schedule")
 local RedisService = cc.load("redis").service
+local JobService = cc.load("job").service
+local BeansService = cc.load("beanstalkd").service
 require("cocos.init")
 local WorldCls = import("models.World")
 local Entity = require("models.Entity")
 local NetMsg = require("network.NetMsg")
-local _CHANNEL_ALL_ = "ChannelAll"
+local Constant = require("models.Constant")
 
 function Schedule:ctor(work)
 	self.work_ = work
@@ -23,9 +25,32 @@ function Schedule:reborn(args)
 	self:closeRedis_()
 end
 
-function Schedule:loop()
+function Schedule:loop(args)
+	self.config_ = args or self.config_
+	assert("table" == type(self.config_))
+
 	local redis = self:getRedis_()
+	local ids = redis:command("SMEMBERS", Constant._REDIS_KEY_SETS_ENTITY_STATIC_)
+	for i, id in ipairs(ids) do
+		local vals = redis:command("HMGET", id, "health", "healthMax")
+		if "table" == type(vals) and 2 == #vals then
+			if vals[1] < vals[2] then
+				redis:command("HINCRBY", id, "health", 1)
+			end
+		end
+	end
+
 	self:closeRedis_()
+
+	self:schedule("schedule.loop", nil, 1)
+end
+
+function Schedule:schedule(action, data, delay)
+	local cfg = self.config_
+	local beans = BeansService.new(cfg.beanstalkd)
+	beans:connect()
+	local job = JobService.new(self.redis_, beans, cfg)
+	job:add(action, data, delay)
 end
 
 function Schedule:getRedis_()
@@ -46,7 +71,7 @@ function Schedule:broadcast_(action, args)
 	msg:setBody(args)
 
 	local redis = self.redis_
-    redis:command("PUBLISH", _CHANNEL_ALL_, msg:getString())
+    redis:command("PUBLISH", Constant._CHANNEL_ALL_, msg:getString())
 end
 
 return Schedule
