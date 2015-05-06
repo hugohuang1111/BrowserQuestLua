@@ -489,7 +489,7 @@ function Game:findEntityById(id)
 	end
 
 	for k,v in pairs(self.entitys_) do
-		if v:getId() == id then
+		if tostring(v:getId()) == tostring(id) then
 			return v
 		end
 	end

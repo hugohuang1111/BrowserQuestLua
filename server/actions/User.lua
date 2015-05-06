@@ -84,10 +84,6 @@ function User:move(args)
 	local body = msg:getBody()
 	local entity = World:getEntity(body.id)
 	entity:setPos(body.to)
-	if entity.getPlayerInfo then
-		-- entity is player instance
-		entity:healthChange(1)
-	end
 	entity:save()
 
 	World:broadcast("user.move", body)

@@ -30,23 +30,24 @@ function Schedule:loop(args)
 	assert("table" == type(self.config_))
 
 	local redis = self:getRedis_()
-	local ids = redis:command("SMEMBERS", Constant._REDIS_KEY_SETS_ENTITY_STATIC_)
+	local ids = redis:command("SMEMBERS", Constant._REDIS_KEY_SETS_PLAYER_)
 	for i, id in ipairs(ids) do
 		local vals = redis:command("HMGET", id, "health", "healthMax")
 		if "table" == type(vals) and 2 == #vals then
 			if vals[1] < vals[2] then
 				redis:command("HINCRBY", id, "health", 1)
+				self:broadcast_("user.info", {id = id, healthPercent = vals[1]/vals[2]})
 			end
 		end
 	end
 
-	self:closeRedis_()
-
 	self:schedule("schedule.loop", nil, 1)
+
+	self:closeRedis_()
 end
 
 function Schedule:schedule(action, data, delay)
-	local cfg = self.config_
+	local cfg = self.work_.config
 	local beans = BeansService.new(cfg.beanstalkd)
 	beans:connect()
 	local job = JobService.new(self.redis_, beans, cfg)
