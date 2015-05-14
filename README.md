@@ -7,3 +7,4 @@ BrowserQuest write by Lua
 3. 修改 `client/BrowserQuestLua/src/config.lua` 中的 SERVER_ADDR 项为 GBC 服务器的 ip 地址
 4. 运行
 
+ps. 因 ios模拟器 原因, ios模拟器 可能会出现收不到数据情况, 此时建议用mac版尝试
