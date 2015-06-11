@@ -2,6 +2,7 @@
 local NetMsgConstants = import("..network.NetMsgConstants")
 local NetMsg = import("..network.NetMsg")
 local Play = class("Play")
+Play.ACCEPTED_REQUEST_TYPE = "websocket"
 
 function Play:move(args)
 	local msg = NetMsg.parser(args)

@@ -3,6 +3,7 @@ local NetMsgConstants = import("..network.NetMsgConstants")
 local NetMsg = import("..network.NetMsg")
 
 local User = class("User")
+User.ACCEPTED_REQUEST_TYPE = "websocket"
 
 function User:ctor(connect)
 	self.connect_ = connect
