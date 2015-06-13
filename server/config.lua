@@ -31,7 +31,6 @@ local config = {
     -- user app
     -- appRootPath = "/opt/quick_server/<USER_APP_ROOT>",
     appRootPath = "/home/htl/MacDocuments/Work/BrowserQuestLua/server",
-    actionModuleSuffix = "",
 
     numOfWorkers = 4,
 

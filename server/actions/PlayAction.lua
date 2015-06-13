@@ -4,7 +4,7 @@ local NetMsg = import("..network.NetMsg")
 local Play = class("Play")
 Play.ACCEPTED_REQUEST_TYPE = "websocket"
 
-function Play:move(args)
+function Play:moveAction(args)
 	local msg = NetMsg.parser(args)
 	local body = msg:getBody()
 	local entity = World:getEntity(body.id)
@@ -18,7 +18,7 @@ function Play:move(args)
 	World:broadcast("play.move", body)
 end
 
-function Play:attack(args)
+function Play:attackAction(args)
 	local msg = NetMsg.parser(args)
 	local body = msg:getBody()
 
@@ -33,14 +33,14 @@ function Play:attack(args)
 	World:broadcast("play.attack", body)
 end
 
-function Play:attackmove(args)
+function Play:attackmoveAction(args)
 	local msg = NetMsg.parser(args)
 	local body = msg:getBody()
 
 	World:broadcast("play.attackMove", body)
 end
 
-function Play:chat(args)
+function Play:chatAction(args)
 	local msg = NetMsg.parser(args)
 	World:broadcastNetMsg("play.chat", msg)
 end

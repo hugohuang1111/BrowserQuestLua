@@ -5,7 +5,7 @@ function Launcher:ctor(connect)
 	self.connect_ = connect
 end
 
-function Launcher:getsessionid(args)
+function Launcher:getsessionidAction(args)
 	if not args.appName or "BrowerQuestLua" ~= args.appName then
 		throw("invalid launcher command")
 	end

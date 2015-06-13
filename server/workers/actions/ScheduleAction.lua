@@ -9,11 +9,13 @@ local Entity = require("models.Entity")
 local NetMsg = require("network.NetMsg")
 local Constant = require("models.Constant")
 
+Schedule.ACCEPTED_REQUEST_TYPE = "worker"
+
 function Schedule:ctor(work)
 	self.work_ = work
 end
 
-function Schedule:reborn(args)
+function Schedule:rebornAction(args)
 	assert("table" == type(args) and args.id)
 
 	local entity = Entity.new()
@@ -25,7 +27,7 @@ function Schedule:reborn(args)
 	self:closeRedis_()
 end
 
-function Schedule:loop(args)
+function Schedule:loopAction(args)
 	self.config_ = args or self.config_
 	assert("table" == type(self.config_))
 
@@ -46,7 +48,7 @@ function Schedule:loop(args)
 	self:closeRedis_()
 end
 
-function Schedule:schedule(action, data, delay)
+function Schedule:scheduleAction(action, data, delay)
 	local cfg = self.work_.config
 	local beans = BeansService.new(cfg.beanstalkd)
 	beans:connect()

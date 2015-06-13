@@ -3,7 +3,7 @@ BrowserQuest write by Lua
 
 运行步骤
 
-1. 将服务器中的 config.lua 替换为 `server/config.lua`
+1. 修改 `config.lua` 中的 __websocketsMaxPayloadLen__ 项的值为 64 * 1024 
 
 2. 修改 `config.lua` 中的 `appRootPath` 项的值为 BrowserQuestLua 中 server 文件夹所在的真实路径
 

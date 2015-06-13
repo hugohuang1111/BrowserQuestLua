@@ -9,7 +9,7 @@ function User:ctor(connect)
 	self.connect_ = connect
 end
 
-function User:welcome(args)
+function User:welcomeAction(args)
 	printInfo("User welcome entity")
 	local msg = NetMsg.parser(args)
 	local playerInfo = msg:getBody()
@@ -41,7 +41,7 @@ function User:welcome(args)
 	printInfo("User welcome exit")
 end
 
-function User:reborn(args)
+function User:rebornAction(args)
 	local msg = NetMsg.parser(args)
 	local playerInfo = msg:getBody()
 	msg:setBody(nil)
@@ -64,7 +64,7 @@ function User:reborn(args)
 	-- return msg:getData()
 end
 
-function User:info(args)
+function User:infoAction(args)
 	local msg = NetMsg.parser(args)
 	local body = msg:getBody()
 	local entity = World:getEntity(body.id)
@@ -80,7 +80,7 @@ function User:info(args)
 	entity:save()
 end
 
-function User:move(args)
+function User:moveAction(args)
 	local msg = NetMsg.parser(args)
 	local body = msg:getBody()
 	local entity = World:getEntity(body.id)
@@ -90,7 +90,7 @@ function User:move(args)
 	World:broadcast("user.move", body)
 end
 
-function User:attack(args)
+function User:attackAction(args)
 	local msg = NetMsg.parser(args)
 	local body = msg:getBody()
 
@@ -129,7 +129,7 @@ function User:attack(args)
 	end
 end
 
-function User:cancelattack(args)
+function User:cancelattackAction(args)
 	local msg = NetMsg.parser(args)
 	local body = msg:getBody()
 
